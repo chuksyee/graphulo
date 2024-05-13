@@ -1,6 +1,6 @@
 package edu.mit.ll.graphulo.reducer;
 
-import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang3.SerializationUtils;
 
 import java.io.Serializable;
 

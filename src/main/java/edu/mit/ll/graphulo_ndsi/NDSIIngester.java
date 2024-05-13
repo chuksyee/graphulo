@@ -4,13 +4,15 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.io.Text;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -30,10 +32,13 @@ import static edu.mit.ll.graphulo_ndsi.NDSIGraphulo.PADSIZE_LATLON;
 public class NDSIIngester {
   private static final Logger log = LoggerFactory.getLogger(NDSIIngester.class);
 
-  private Connector connector;
-
-  public NDSIIngester(Connector connector) {
-    this.connector = connector;
+  //private Connector connector;
+  private AccumuloClient client;
+  //public NDSIIngester(Connector connector) {
+  //  this.connector = connector;
+  //}
+  public NDSIIngester(AccumuloClient client) {
+    this.client = client;
   }
 
   /**
@@ -45,18 +50,19 @@ public class NDSIIngester {
    * @throws IOException
    */
   public long ingestFile(File file, String Atable, boolean deleteIfExists) throws IOException {
-    if (deleteIfExists && connector.tableOperations().exists(Atable))
+    if (deleteIfExists && this.client.tableOperations().exists(Atable))
       try {
-        connector.tableOperations().delete(Atable);
+        //connector.tableOperations().delete(Atable);
+        this.client.tableOperations().delete(Atable);
       } catch (AccumuloException | AccumuloSecurityException e) {
         log.warn("trouble deleting table "+Atable, e);
         throw new RuntimeException(e);
       } catch (TableNotFoundException e) {
         throw new RuntimeException(e);
       }
-    if (!connector.tableOperations().exists(Atable))
+    if (! this.client.tableOperations().exists(Atable))
       try {
-        connector.tableOperations().create(Atable);
+        this.client.tableOperations().create(Atable);
       } catch (AccumuloException | AccumuloSecurityException e) {
         log.warn("trouble creating table " + Atable, e);
         throw new RuntimeException(e);
@@ -70,7 +76,7 @@ public class NDSIIngester {
 
     try (BufferedReader fo = new BufferedReader(new FileReader(file))) {
       BatchWriterConfig config = new BatchWriterConfig();
-      bw = connector.createBatchWriter(Atable, config);
+      bw = this.client.createBatchWriter(Atable, config);
 
       // Skip header line
       fo.readLine();

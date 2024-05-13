@@ -1,6 +1,6 @@
 package edu.mit.ll.graphulo.util;
 
-import org.apache.accumulo.core.client.lexicoder.impl.AbstractLexicoder;
+import org.apache.accumulo.core.clientImpl.lexicoder.AbstractLexicoder;
 
 import java.nio.charset.StandardCharsets;
 

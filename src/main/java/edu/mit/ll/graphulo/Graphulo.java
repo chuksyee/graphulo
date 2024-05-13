@@ -64,7 +64,10 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
+
 import org.apache.accumulo.core.client.Durability;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.MutationsRejectedException;
@@ -132,7 +135,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 
 /**
- * Holds a {@link org.apache.accumulo.core.client.Connector} to an Accumulo instance for calling client Graphulo operations.
+ * Holds a {@link org.apache.accumulo.core.client.AccumuloClient} to an Accumulo instance for calling client Graphulo operations.
  * To enable tracing, wrap a Graphulo call between {@link org.apache.accumulo.core.trace.DistributedTrace#enable(String)}
  * and {@link DistributedTrace#disable()}.
  */
@@ -150,18 +153,19 @@ public class Graphulo {
   public static final Lexicoder<Integer> UINTEGER_LEXICODER = new UIntegerLexicoder();
   public static final IntegerEmptyLexicoder INTEGER_EMPTY_LEXICODER = new IntegerEmptyLexicoder();
 
-  protected final Connector connector;
+  //protected final Connector connector;
+  protected final AccumuloClient client;
   protected final AuthenticationToken authenticationToken;
 
-  public Graphulo(@Nonnull Connector connector, @Nonnull AuthenticationToken password) {
-    this.connector = connector;
+  public Graphulo(@Nonnull AccumuloClient client, @Nonnull AuthenticationToken password) {
+    this.client = client;
     this.authenticationToken = password;
     checkCredentials();
     checkGraphuloInstalled();
   }
 
-  public Connector getConnector() {
-    return connector;
+  public AccumuloClient getClient() {
+    return this.client;
   }
 
   /**
@@ -169,17 +173,17 @@ public class Graphulo {
    */
   private void checkCredentials() {
     try {
-      if (!connector.securityOperations().authenticateUser(connector.whoami(), authenticationToken))
-        throw new IllegalArgumentException("instance " + connector.getInstance().getInstanceName() + ": bad username " + connector.whoami() + " with token " + authenticationToken);
+      if (! this.client.securityOperations().authenticateUser(this.client.whoami(), authenticationToken))
+        throw new IllegalArgumentException("instance " + this.client.instanceOperations().getInstanceId().canonical() + ": bad username " + this.client.whoami() + " with token " + authenticationToken);
     } catch (AccumuloException | AccumuloSecurityException e) {
-      throw new IllegalArgumentException("instance " + connector.getInstance().getInstanceName() + ": error with username " + connector.whoami() + " with token " + authenticationToken, e);
+      throw new IllegalArgumentException("instance " + this.client.instanceOperations().getInstanceId().canonical() + ": error with username " + this.client.whoami() + " with token " + authenticationToken, e);
     }
   }
 
   /** Check the Graphulo classes are installed on the Accumulo server. */
   private void checkGraphuloInstalled() {
     try {
-      connector.tableOperations().testClassLoad(MetadataTable.NAME, RemoteWriteIterator.class.getName(), SortedKeyValueIterator.class.getName());
+      this.client.tableOperations().testClassLoad(MetadataTable.NAME, RemoteWriteIterator.class.getName(), SortedKeyValueIterator.class.getName());
     } catch (AccumuloException | AccumuloSecurityException e) {
       log.error("Problem loading a Graphulo class in Accumulo. Did you install the Graphulo JAR in the Accumulo server under $ACCUMULO_HOME/lib/ext?", e);
       throw new RuntimeException(e);
@@ -192,7 +196,7 @@ public class Graphulo {
 
   @Override
   public String toString() {
-    return "Graphulo: User "+connector.whoami()+" connected to "+connector.getInstance();
+    return "Graphulo: User "+ this.client.whoami()+" connected to "+ this.client.instanceOperations().getInstanceId().canonical();
   }
 
 
@@ -644,7 +648,7 @@ public class Graphulo {
     if (colFilterB != null && (colFilterB.isEmpty() || (colFilterB.length()==2 && colFilterB.charAt(0)==':')))
       colFilterB = null;
 
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     if (!ATtable.equals(TwoTableIterator.CLONESOURCE_TABLENAME) && !tops.exists(ATtable))
       throw new IllegalArgumentException("Table AT does not exist. Given: " + ATtable);
     if (!tops.exists(Btable))
@@ -703,7 +707,7 @@ public class Graphulo {
     // scan B with TableMultIterator
     BatchScanner bs;
     try {
-      bs = connector.createBatchScanner(Btable, Bauthorizations, 50); // TODO P2: set number of batch scan threads
+      bs = this.client.createBatchScanner(Btable, Bauthorizations, 50); // TODO P2: set number of batch scan threads
     } catch (TableNotFoundException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
@@ -881,7 +885,7 @@ public class Graphulo {
     if (colFilter != null && (colFilter.isEmpty() || (colFilter.length()==2 && colFilter.charAt(0)==':')))
       colFilter = null;
 
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     if (!tops.exists(Atable))
       throw new IllegalArgumentException("Table A does not exist. Given: " + Atable);
 
@@ -932,7 +936,7 @@ public class Graphulo {
     boolean givenBS = bs != null;
     if (bs == null)
       try {
-        bs = connector.createBatchScanner(Atable, Authorizations.EMPTY, 50); // TODO P2: set number of batch scan threads
+        bs = this.client.createBatchScanner(Atable, Authorizations.EMPTY, 50); // TODO P2: set number of batch scan threads
       } catch (TableNotFoundException e) {
         log.error("crazy", e);
         throw new RuntimeException(e);
@@ -1127,9 +1131,9 @@ public class Graphulo {
 
     BatchScanner bs, bsDegree = null;
     try {
-      bs = connector.createBatchScanner(Atable, Aauthorizations, 50); // TODO P2: set number of batch scan threads
+      bs = this.client.createBatchScanner(Atable, Aauthorizations, 50); // TODO P2: set number of batch scan threads
       if (needDegreeFiltering && ADegtable != null)
-        bsDegree = connector.createBatchScanner(ADegtable, ADegauthorizations, 4); // TODO P2: set number of batch scan threads
+        bsDegree = this.client.createBatchScanner(ADegtable, ADegauthorizations, 4); // TODO P2: set number of batch scan threads
     } catch (TableNotFoundException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
@@ -1380,7 +1384,7 @@ public class Graphulo {
     }
 
 
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     if (!tops.exists(Etable))
       throw new IllegalArgumentException("Table E does not exist. Given: " + Etable);
     if (Rtable != null && !tops.exists(Rtable))
@@ -1434,9 +1438,9 @@ public class Graphulo {
 
     BatchScanner bs, bsDegree = null;
     try {
-      bs = connector.createBatchScanner(Etable, Eauthorizations, 50); // TODO P2: set number of batch scan threads
+      bs = this.client.createBatchScanner(Etable, Eauthorizations, 50); // TODO P2: set number of batch scan threads
       if (needDegreeFiltering)
-        bsDegree = connector.createBatchScanner(ETDegtable, EDegauthorizations, 4); // TODO P2: set number of batch scan threads
+        bsDegree = this.client.createBatchScanner(ETDegtable, EDegauthorizations, 4); // TODO P2: set number of batch scan threads
     } catch (TableNotFoundException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
@@ -1576,7 +1580,7 @@ public class Graphulo {
 
     Scanner scan;
     try {
-      scan = connector.createScanner(table, Authorizations.EMPTY);
+      scan = this.client.createScanner(table, Authorizations.EMPTY);
     } catch (TableNotFoundException e) {
       log.error("Table does not exist: " + table, e);
       throw new RuntimeException(e);
@@ -1633,7 +1637,7 @@ public class Graphulo {
       set.add(new Text(new byte[]{(byte)(pt & 0xFF)}));
     }
 
-    connector.tableOperations().addSplits(table, set);
+    this.client.tableOperations().addSplits(table, set);
 
     return set.toString();
   }
@@ -1769,7 +1773,7 @@ public class Graphulo {
       mostAllOutNodes = new HashSet<>();
     char sep = v0.charAt(v0.length() - 1);
 
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     if (!tops.exists(Stable))
       throw new IllegalArgumentException("Table A does not exist. Given: " + Stable);
     if (Rtable != null && !tops.exists(Rtable))
@@ -1791,10 +1795,10 @@ public class Graphulo {
 
     BatchScanner bs, bsDegree = null;
     try {
-      bs = connector.createBatchScanner(Stable, Sauthorizations, 50); // TODO P2: set number of batch scan threads
+      bs = this.client.createBatchScanner(Stable, Sauthorizations, 50); // TODO P2: set number of batch scan threads
       if (needDegreeFiltering)
         bsDegree = Stable.equals(SDegtable) ? bs :
-            connector.createBatchScanner(SDegtable, Sauthorizations, 4); // TODO P2: set number of batch scan threads
+            this.client.createBatchScanner(SDegtable, Sauthorizations, 4); // TODO P2: set number of batch scan threads
     } catch (TableNotFoundException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
@@ -1913,8 +1917,8 @@ public class Graphulo {
     Scanner scan;
     BatchWriter bw;
     try {
-      scan = connector.createScanner(Rtable, Sauthorizations);
-      bw = connector.createBatchWriter(Rtable, new BatchWriterConfig());
+      scan = this.client.createScanner(Rtable, Sauthorizations);
+      bw = this.client.createBatchWriter(Rtable, new BatchWriterConfig());
     } catch (TableNotFoundException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
@@ -2043,7 +2047,7 @@ public class Graphulo {
 
     BatchScanner bs;
     try {
-      bs = connector.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary
+      bs = this.client.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary
     } catch (TableNotFoundException e) {
       log.error("table "+table+" does not exist", e);
       throw new RuntimeException(e);
@@ -2113,7 +2117,7 @@ public class Graphulo {
     checkGiven(true, "Aorig", Aorig);
     Preconditions.checkArgument(maxiter > 0, "bad maxiter %s", maxiter);
     Preconditions.checkArgument(Rfinal != null && !Rfinal.isEmpty(), "Output table must be given or operation is useless: Rfinal=%s", Rfinal);
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     boolean RfinalExists = tops.exists(Rfinal);
 
     try {
@@ -2298,7 +2302,7 @@ public class Graphulo {
                               List<Long> specialLongList) {
     checkGiven(true, "Aorig", Aorig);
     Preconditions.checkArgument(Rfinal != null && !Rfinal.isEmpty(), "Output table must be given or operation is useless: Rfinal=%s", Rfinal);
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     boolean RfinalExists = tops.exists(Rfinal);
     if (RfinalExists)
       log.warn("Fused version of kTruss may not work when the result table already exists due to iterator conflicts");
@@ -2495,7 +2499,7 @@ public class Graphulo {
                               List<Long> specialLongList, String intermediateDurability) {
     checkGiven(true, "Aorig", Aorig);
     Preconditions.checkArgument(Rfinal != null && !Rfinal.isEmpty(), "Output table must be given or operation is useless: Rfinal=%s", Rfinal);
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     boolean RfinalExists = tops.exists(Rfinal);
     if (RfinalExists)
       log.warn("Fused version of kTruss may not work when the result table already exists due to iterator conflicts");
@@ -2636,7 +2640,7 @@ public class Graphulo {
 
   public void setDegreeTableTotal(final String degreeTable, final long total) {
     try {
-      connector.tableOperations().setProperty(degreeTable, PROP_TOTAL, Long.toString(total));
+      this.client.tableOperations().setProperty(degreeTable, PROP_TOTAL, Long.toString(total));
     } catch (AccumuloException | AccumuloSecurityException e) {
       log.error("problem setting table property "+PROP_TOTAL+" on table "+degreeTable+" to "+total, e);
     }
@@ -2644,7 +2648,7 @@ public class Graphulo {
 
   public long getDegreeTableTotal(final String degreeTable) {
     try {
-      final Iterable<Entry<String, String>> props = connector.tableOperations().getProperties(degreeTable);
+      final Iterable<Entry<String, String>> props = this.client.tableOperations().getProperties(degreeTable);
       for (Entry<String, String> prop : props) {
         if( prop.getKey().equals(PROP_TOTAL) )
           return Long.parseLong(prop.getValue());
@@ -2664,7 +2668,7 @@ public class Graphulo {
 
     final BatchScanner bs;
     try {
-      bs = connector.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary
+      bs = this.client.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary
     } catch (TableNotFoundException e) {
       log.error("table "+table+" does not exist", e);
       throw new RuntimeException(e);
@@ -2694,7 +2698,7 @@ public class Graphulo {
     final IteratorSetting itset = new IteratorSetting(1, "degreeSums", IntSummingCombiner.class);
     IntSummingCombiner.setEncodingType(itset, Type.BYTE_ONE);
     IntSummingCombiner.setCombineAllColumns(itset, true);
-    GraphuloUtil.applyIteratorSoft(itset, connector.tableOperations(), table);
+    GraphuloUtil.applyIteratorSoft(itset, this.client.tableOperations(), table);
   }
 
 
@@ -2709,7 +2713,7 @@ public class Graphulo {
 
     final Scanner scan;
     try {
-      scan = connector.createScanner(degreeTable, Authorizations.EMPTY);
+      scan = this.client.createScanner(degreeTable, Authorizations.EMPTY);
     } catch (TableNotFoundException e) {
       log.error("Table does not exist: " + degreeTable, e);
       throw new RuntimeException(e);
@@ -2732,7 +2736,7 @@ public class Graphulo {
     scan.close();
 
     try {
-      connector.tableOperations().addSplits(mainTable, set);
+      this.client.tableOperations().addSplits(mainTable, set);
     } catch (AccumuloSecurityException | TableNotFoundException | AccumuloException e) {
       log.error("cannot set splits "+set+" on main table "+mainTable, e);
     }
@@ -2769,7 +2773,7 @@ public class Graphulo {
                       String intermediateDurability, List<Long> specialLongList) {
 
     checkGiven(true, "Aorig", Aorig);
-    final TableOperations tops = connector.tableOperations();
+    final TableOperations tops = this.client.tableOperations();
     Aauthorizations = Aauthorizations == null ? Authorizations.EMPTY : Aauthorizations;
     intermediateDurability = emptyToNull(intermediateDurability);
     Preconditions.checkArgument(intermediateDurability == null || Durability.valueOf(intermediateDurability.toUpperCase()) != Durability.DEFAULT,
@@ -2802,7 +2806,7 @@ public class Graphulo {
 //      deleteTables(Atmp);
 
       // if the temp table exists, assume it was created externally
-      if (!connector.tableOperations().exists(Atmp)) {
+      if (!this.client.tableOperations().exists(Atmp)) {
         final Map<String, String> propsToSet = intermediateDurability == null ? null : Collections.singletonMap(TABLE_DURABILITY, intermediateDurability);
         tops.clone(Aorig, Atmp, true, propsToSet, null);
         // this copies upperTriangleFilter
@@ -2872,7 +2876,7 @@ public class Graphulo {
                        String intermediateDurability, List<Long> specialLongList) {
 
     checkGiven(true, "Aorig", Aorig);
-    final TableOperations tops = connector.tableOperations();
+    final TableOperations tops = this.client.tableOperations();
     Aauthorizations = Aauthorizations == null ? Authorizations.EMPTY : Aauthorizations;
     intermediateDurability = emptyToNull(intermediateDurability);
     Preconditions.checkArgument(intermediateDurability == null || Durability.valueOf(intermediateDurability.toUpperCase()) != Durability.DEFAULT,
@@ -2882,9 +2886,9 @@ public class Graphulo {
       final String Atmp = Aorig + TRICOUNT_TEMP_TABLE_SUFFIX;
       // for experiment, pre-create and split temp table
 //      deleteTables(Atmp);
-      if( !connector.tableOperations().exists(Atmp) ) {
-        GraphuloUtil.createTables(connector, false, Atmp);
-        GraphuloUtil.copySplits(connector.tableOperations(), Eorig, Atmp);
+      if( !this.client.tableOperations().exists(Atmp) ) {
+        GraphuloUtil.createTables(this.client, false, Atmp);
+        GraphuloUtil.copySplits(this.client.tableOperations(), Eorig, Atmp);
       }
 
       // determine if we will relax the durability of the intermediate tables
@@ -2993,7 +2997,7 @@ public class Graphulo {
                             String intermediateDurability, List<Long> specialLongList) {
 
     checkGiven(true, "Aorig", Aorig);
-    final TableOperations tops = connector.tableOperations();
+    final TableOperations tops = this.client.tableOperations();
     Aauthorizations = Aauthorizations == null ? Authorizations.EMPTY : Aauthorizations;
     intermediateDurability = emptyToNull(intermediateDurability);
     Preconditions.checkArgument(intermediateDurability == null || Durability.valueOf(intermediateDurability.toUpperCase()) != Durability.DEFAULT,
@@ -3063,7 +3067,7 @@ public class Graphulo {
 
       int triangles = 0;
       final long tBegin2 = System.currentTimeMillis();
-      try (final BatchScanner bs = connector.createBatchScanner(Atmp, Aauthorizations, 50)) {
+      try (final BatchScanner bs = this.client.createBatchScanner(Atmp, Aauthorizations, 50)) {
         bs.setRanges(Collections.singleton(new Range()));
         bs.addScanIterator(filterAndReduce);
         for (Entry<Key, Value> e : bs) {
@@ -3121,7 +3125,7 @@ public class Graphulo {
     }
     checkGiven(true, "Aorig", Aorig);
     Preconditions.checkArgument(Rfinal != null && !Rfinal.isEmpty(), "Output table must be given or operation is useless: Rfinal=%s", Rfinal);
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     boolean RfinalExists = tops.exists(Rfinal);
     Preconditions.checkArgument(maxiter > 0, "bad maxiter %s", maxiter);
 
@@ -3222,7 +3226,7 @@ public class Graphulo {
         log.error("",e);
       }
     }
-    GraphuloUtil.writeEntries(connector, kTrussMap, Rfinal, false);
+    GraphuloUtil.writeEntries(this.client, kTrussMap, Rfinal, false);
     log.debug("Put time: "+(System.currentTimeMillis()-t3));
     return nnzAfter;
   }
@@ -3254,7 +3258,7 @@ public class Graphulo {
     ETorig = emptyToNull(ETorig);
     edgeFilter = emptyToNull(edgeFilter);
     Preconditions.checkArgument(Rfinal != null || RTfinal != null, "One Output table must be given or operation is useless: Rfinal=%s; RTfinal=%s", Rfinal, RTfinal);
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     boolean RfinalExists = Rfinal != null && tops.exists(Rfinal),
         RTfinalExists = RTfinal != null && tops.exists(RTfinal);
 
@@ -3433,7 +3437,7 @@ public class Graphulo {
     IteratorSetting jda = JaccardDegreeApply.iteratorSetting(
         DEFAULT_COMBINER_PRIORITY+1, basicRemoteOpts(ApplyIterator.APPLYOP + GraphuloUtil.OPT_SUFFIX, ADeg, null, Aauthorizations));
     jda = GraphuloUtil.addOnScopeOption(jda, EnumSet.of(IteratorUtil.IteratorScope.scan));
-    GraphuloUtil.applyIteratorSoft(jda, connector.tableOperations(), Rfinal);
+    GraphuloUtil.applyIteratorSoft(jda, this.client.tableOperations(), Rfinal);
 
     return npp;
   }
@@ -3458,7 +3462,7 @@ public class Graphulo {
     Preconditions.checkArgument(Rfinal != null && !Rfinal.isEmpty(), "Output table must be given or operation is useless: Rfinal=%s", Rfinal);
 //    Preconditions.checkArgument(!tops.exists(Rfinal), "Output Jaccard table must not exist: Rfinal=%s", Rfinal); // this could be relaxed, at the possibility of peril
     // ^^^ I have relaxed this condition to allow pre-creating result table. Make sure it is a fresh table with no iterators on it.
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     boolean RfinalExists = tops.exists(Rfinal);
 
     long t1 = System.currentTimeMillis();
@@ -3521,7 +3525,7 @@ public class Graphulo {
         log.error("",e);
       }
     }
-    GraphuloUtil.writeEntries(connector, kTrussMap, Rfinal, false);
+    GraphuloUtil.writeEntries(this.client, kTrussMap, Rfinal, false);
     log.debug("Put time: "+(System.currentTimeMillis()-t3));
 
     long t4 = System.currentTimeMillis();
@@ -3560,12 +3564,12 @@ public class Graphulo {
     checkGiven(true, "table", table);
     if (colq == null) colq = "";
     Preconditions.checkArgument(Degtable != null && !Degtable.isEmpty(), "Output table must be given: Degtable=%s", Degtable);
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     BatchScanner bs;
     try {
       if (!tops.exists(Degtable))
         tops.create(Degtable);
-      bs = connector.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary
+      bs = this.client.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary
     } catch (TableNotFoundException | TableExistsException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
@@ -3618,9 +3622,9 @@ public class Graphulo {
                                              String remoteTableTranspose, Authorizations authorizations) {
     if (prefix == null) prefix = "";
     Map<String,String> opt = new HashMap<>();
-    String instance = connector.getInstance().getInstanceName();
-    String zookeepers = connector.getInstance().getZooKeepers();
-    String user = connector.whoami();
+    String instance = this.client.instanceOperations().getInstanceId().canonical();
+    String zookeepers = this.client.getInstance().getZooKeepers();
+    String user = this.client.whoami();
     opt.put(prefix+RemoteSourceIterator.ZOOKEEPERHOST, zookeepers);
     opt.put(prefix + RemoteSourceIterator.INSTANCENAME, instance);
     if (remoteTable != null)
@@ -3642,7 +3646,7 @@ public class Graphulo {
 
     BatchScanner bs;
     try {
-      bs = connector.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary // todo: 2 threads is arbitrary
+      bs = this.client.createBatchScanner(table, Authorizations.EMPTY, 50); // todo: 50 threads is arbitrary // todo: 2 threads is arbitrary
     } catch (TableNotFoundException e) {
       log.error("table "+table+" does not exist", e);
       throw new RuntimeException(e);
@@ -3671,12 +3675,12 @@ public class Graphulo {
   /** Delete tables. If they already exist, delete and re-create them if forceDelete==true,
    * otherwise throw an IllegalStateException. */
   private void deleteTables(String... tns) {
-    GraphuloUtil.deleteTables(connector, tns);
+    GraphuloUtil.deleteTables(this.client, tns);
   }
 
   /** Ensure arugments are not null and not empty. If mustExist, ensures the arguments exist as Accumulo tables. */
   private void checkGiven(boolean mustExist, String varnames, String... args) {
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     String[] varnamesArr = varnames.split(",");
     assert varnamesArr.length == args.length;
     for (int i = 0; i < args.length; i++) {
@@ -3738,7 +3742,7 @@ public class Graphulo {
 
     boolean DBG = false;
     if (DBG)
-      DebugUtil.printTable("0: W is NxK:", connector, Wfinal, 5);
+      DebugUtil.printTable("0: W is NxK:", this.client, Wfinal, 5);
 
     // No need to actually measure N and M
 ////    long N = countRows(Aorig);
@@ -3766,7 +3770,7 @@ public class Graphulo {
         nmfStep(K, Wfinal, Aorig, Hfinal, HTfinal, Ttmp1, Ttmp2, cutoffThreshold, maxColsPerTopic);
       }
       if (DBG)
-        DebugUtil.printTable(numiter + ": H is KxM:", connector, Hfinal, 5);
+        DebugUtil.printTable(numiter + ": H is KxM:", this.client, Hfinal, 5);
       try (TraceScope scope = Trace.startSpan("nmfStepToW", Sampler.ALWAYS)) {
         nmfStep(K, HTfinal, ATorig, WTfinal, Wfinal, Ttmp1, Ttmp2, cutoffThreshold, -1);
       }

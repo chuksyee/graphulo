@@ -7,14 +7,20 @@ import edu.mit.ll.graphulo.util.PeekingIterator1;
 import edu.mit.ll.graphulo.util.SerializationUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.ClientSideIteratorScanner;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.Instance;
+
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
+
+//import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.ClientSideIteratorScanner;
+//import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Instance;
+
 import org.apache.accumulo.core.client.IteratorSetting;
+
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.ByteSequence;
@@ -330,20 +336,21 @@ public class RemoteSourceIterator implements SortedKeyValueIterator<Key, Value>/
   }
 
   private void setupConnectorScanner() {
-    ClientConfiguration cc = ClientConfiguration.loadDefault().withInstance(instanceName).withZkHosts(zookeeperHost);
-    if (timeout != -1)
-      cc = cc.withZkTimeout(timeout);
-    Instance instance = new ZooKeeperInstance(cc);
-    Connector connector;
+    //ClientConfiguration cc = ClientConfiguration.loadDefault().withInstance(instanceName).withZkHosts(zookeeperHost);
+    //if (timeout != -1)
+    //  cc = cc.withZkTimeout(timeout);
+    //Instance instance = new ZooKeeperInstance(cc);
+    //Connector connector;
+    //try {
+    //  connector = instance.getConnector(username, auth);
+    //} catch (AccumuloException | AccumuloSecurityException e) {
+    //  log.error("failed to connect to Accumulo instance " + instanceName, e);
+    //  throw new RuntimeException(e);
+    //}
     try {
-      connector = instance.getConnector(username, auth);
-    } catch (AccumuloException | AccumuloSecurityException e) {
-      log.error("failed to connect to Accumulo instance " + instanceName, e);
-      throw new RuntimeException(e);
-    }
-
-    try {
-      scanner = connector.createScanner(tableName, authorizations);
+      AccumuloClient client = Accumulo.newClient().to(instanceName,zookeeperHost).as(username, auth).build();
+      scanner = client.createScanner(tableName, authorizations);
+      //scanner = connector.createScanner(tableName, authorizations);
     } catch (TableNotFoundException e) {
       log.error(tableName + " does not exist in instance " + instanceName, e);
       throw new RuntimeException(e);

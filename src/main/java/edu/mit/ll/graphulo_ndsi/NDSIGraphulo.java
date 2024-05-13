@@ -3,7 +3,10 @@ package edu.mit.ll.graphulo_ndsi;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.mit.ll.graphulo.Graphulo;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
+
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.security.Authorizations;
@@ -14,8 +17,8 @@ import java.util.Collections;
  * Query on NDSI data
  */
 public class NDSIGraphulo extends Graphulo {
-  public NDSIGraphulo(Connector connector, PasswordToken password) {
-    super(connector, password);
+  public NDSIGraphulo(AccumuloClient client, PasswordToken password) {
+    super(client, password);
   }
 
   /** Pad long lat/lon to 5 digits. */
