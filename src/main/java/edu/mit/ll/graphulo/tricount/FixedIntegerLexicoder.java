@@ -1,6 +1,6 @@
 package edu.mit.ll.graphulo.tricount;
 
-import org.apache.accumulo.core.client.lexicoder.impl.AbstractLexicoder;
+import org.apache.accumulo.core.client.lexicoder.AbstractLexicoder;
 
 import java.util.Arrays;
 

@@ -11,7 +11,7 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.ScannerBase;
@@ -29,7 +29,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
-import org.apache.accumulo.core.iterators.system.ColumnQualifierFilter;
+import org.apache.accumulo.core.iteratorsImpl.system.ColumnQualifierFilter;
 import org.apache.accumulo.core.iterators.user.ColumnSliceFilter;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
@@ -941,7 +941,7 @@ System.out.println(",a,,".split(",",-1).length + Arrays.toString(",a,,".split(",
   /**
    * Write entries to a table.
    */
-  public static void writeEntries(Connector connector, Map<Key, Value> map, String table, boolean createIfNotExist) {
+  public static void writeEntries(AccumuloClient connector, Map<Key, Value> map, String table, boolean createIfNotExist) {
     if (createIfNotExist && !connector.tableOperations().exists(table))
       try {
         connector.tableOperations().create(table);
@@ -1000,7 +1000,7 @@ System.out.println(",a,,".split(",",-1).length + Arrays.toString(",a,,".split(",
 
   /** Delete tables. If they already exist, delete and re-create them if forceDelete==true,
    * otherwise throw an IllegalStateException. */
-  public static void deleteTables(Connector connector, String... tns) {
+  public static void deleteTables(AccumuloClient connector, String... tns) {
     TableOperations tops = connector.tableOperations();
     for (String tn : tns) {
       if (tn != null && tops.exists(tn)) {
@@ -1089,7 +1089,7 @@ System.out.println(",a,,".split(",",-1).length + Arrays.toString(",a,,".split(",
     return dis.toIteratorSetting();
   }
 
-  public static void createTables(Connector connector, boolean deleteIfExists, String... tables) {
+  public static void createTables(AccumuloClient connector, boolean deleteIfExists, String... tables) {
     TableOperations tops = connector.tableOperations();
     for (String tn : tables) {
       if (tn == null)

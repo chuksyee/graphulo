@@ -3,10 +3,12 @@ package edu.mit.ll.graphulo_ocean;
 import com.beust.jcommander.Parameter;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.Instance;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+//import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Instance;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 //import org.apache.log4j.LogManager;
@@ -92,17 +94,18 @@ public class OceanIngestKMers {
     return ingestFileList(conn, opts);
   }
 
-  static Connector setupTXE1Connector(String txe1) {
+  static AccumuloClient setupTXE1Connector(String txe1) {
     return setupTXE1Connector(txe1, getTXE1Authentication(txe1));
   }
 
-  static Connector setupTXE1Connector(String txe1, AuthenticationToken auth) {
+  static AccumuloClient setupTXE1Connector(String txe1, AuthenticationToken auth) {
     String instanceName = txe1;
     String zookeeperHost = txe1+".cloud.llgrid.txe1.mit.edu:2181";
-    ClientConfiguration cc = new ClientConfiguration().withInstance(instanceName).withZkHosts(zookeeperHost);// .withZkTimeout(timeout)
-    Instance instance = new ZooKeeperInstance(cc);
+    //ClientConfiguration cc = new ClientConfiguration().withInstance(instanceName).withZkHosts(zookeeperHost);// .withZkTimeout(timeout)
+    //Instance instance = new ZooKeeperInstance(cc);
     try {
-      return instance.getConnector("AccumuloUser", auth);
+      //return instance.getConnector("AccumuloUser", auth);
+      return Accumulo.newClient().from(auth.getProperties()).build();
     } catch (AccumuloException | AccumuloSecurityException e) {
       throw new RuntimeException("Trouble authenticating to database "+txe1,e);
     }

@@ -1,13 +1,14 @@
 package edu.mit.ll.graphulo.skvi;
 
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
+import org.apache.accumulo.core.client.lexicoder.Encoder;
 
 /**
  * A lexicoder for preserving the native Java sort order of Double values.
  *
  * Temporary stand-in for Accumulo server 1.6.0 compatibility
  */
-public class LongLexicoderTemp implements TypedValueCombiner.Encoder<Long> {
+public class LongLexicoderTemp implements Encoder<Long> {
 
   @Override
   public byte[] encode(Long l) {

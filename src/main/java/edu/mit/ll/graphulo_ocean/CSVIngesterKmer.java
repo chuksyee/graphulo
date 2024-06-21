@@ -9,7 +9,10 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
+
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.MultiTableBatchWriter;
 import org.apache.accumulo.core.client.MutationsRejectedException;
@@ -66,10 +69,10 @@ public abstract class CSVIngesterKmer<T> {
     private final boolean alsoIngestReverseComplement;
     private final boolean alsoIngestSmallerLex;
     private final String Atable, oTsampleDegree, AtableRC, AtableSmaller;
-    private final Connector connector;
+    private final AccumuloClient connector;
     protected final GenomicEncoder G;
 
-    public IngestIntoAccumulo(Connector connector, String atable, String oTsampleDegree, boolean alsoIngestReverseComplement, boolean alsoIngestSmallerLex, int k) {
+    public IngestIntoAccumulo(AccumuloClient connector, String atable, String oTsampleDegree, boolean alsoIngestReverseComplement, boolean alsoIngestSmallerLex, int k) {
       this.alsoIngestReverseComplement = alsoIngestReverseComplement;
       this.alsoIngestSmallerLex = alsoIngestSmallerLex;
       Atable = atable;

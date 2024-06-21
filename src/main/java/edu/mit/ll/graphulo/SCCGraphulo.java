@@ -3,7 +3,10 @@ package edu.mit.ll.graphulo;
 import edu.mit.ll.graphulo.simplemult.MathTwoScalar;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
+
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.admin.TableOperations;
@@ -24,7 +27,7 @@ import java.util.Set;
  */
 public class SCCGraphulo extends Graphulo {
 
-  public SCCGraphulo(Connector connector, PasswordToken password) {
+  public SCCGraphulo(AccumuloClient connector, PasswordToken password) {
     super(connector, password);
   }
 

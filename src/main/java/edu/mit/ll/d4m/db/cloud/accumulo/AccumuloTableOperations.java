@@ -32,11 +32,11 @@ import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
 import org.apache.accumulo.core.iterators.LongCombiner;
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
 import org.apache.accumulo.core.iterators.conf.ColumnSet;
-import org.apache.accumulo.core.master.thrift.MasterClientService;
-import org.apache.accumulo.core.master.thrift.MasterMonitorInfo;
-import org.apache.accumulo.core.master.thrift.TabletServerStatus;
+import org.apache.accumulo.core.manager.thrift.ManagerClientService;
+import org.apache.accumulo.core.manager.thrift.ManagerMonitorInfo;
+import org.apache.accumulo.core.manager.thrift.TabletServerStatus;
 import org.apache.accumulo.core.rpc.ThriftUtil;
-import org.apache.accumulo.core.tabletserver.thrift.TabletClientService;
+import org.apache.accumulo.core.tabletserver.thrift.TabletServerClientService;
 import org.apache.accumulo.core.tabletserver.thrift.TabletStats;
 import org.apache.accumulo.core.trace.thrift.TInfo;
 import org.apache.accumulo.core.util.ColumnFQ;
@@ -177,8 +177,8 @@ public class AccumuloTableOperations {
 	 * Get numEntries from tserver
 	 */
 	private List<TabletStats> getTabletStatsList(String tserverName, List<String> tableNames) throws D4mException {
-		MasterClientService.Iface masterClient= null;
-		TabletClientService.Iface tabClient = null;
+		ManagerClientService.Iface masterClient= null;
+		TabletServerClientService.Iface tabClient = null;
 		//AuthInfo authInfo  = getAuthInfo();
 		List<TabletStats> tabStatsList = new ArrayList<>();
 		try {
@@ -199,8 +199,8 @@ public class AccumuloTableOperations {
 		} catch (TException e) {
 			log.warn("",e);
 		} finally {
-			ThriftUtil.returnClient((MasterClientService.Client)masterClient);
-			ThriftUtil.returnClient((TabletClientService.Client)tabClient);
+			ThriftUtil.returnClient((ManagerClientService.Client)masterClient);
+			ThriftUtil.returnClient((TabletServerClientService.Client)tabClient);
 		}
 
 

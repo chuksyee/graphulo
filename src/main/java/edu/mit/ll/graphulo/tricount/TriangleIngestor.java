@@ -5,12 +5,15 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.Accumulo;
+
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.MultiTableBatchWriter;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.iterators.LongCombiner.Type;
@@ -43,7 +46,7 @@ public final class TriangleIngestor {
   private static final byte[] IN_DEG_BYTES = "indeg".getBytes(StandardCharsets.UTF_8);
   private static final byte[] OUT_DEG_BYTES = "outdeg".getBytes(StandardCharsets.UTF_8);
 
-  private final Connector connector;
+  private final AccumuloClient connector;
   private String countDegree = null;
   @SuppressWarnings("unused")
   public void doCountDegree(String countDegree) {
@@ -52,9 +55,10 @@ public final class TriangleIngestor {
 
   @SuppressWarnings("unused") // used in D4M
   public TriangleIngestor(final String instanceName, final String zookeepers, final String username, final String password) throws AccumuloSecurityException, AccumuloException {
-    this(new ZooKeeperInstance(instanceName, zookeepers).getConnector(username, new PasswordToken(password)));
+    //this(new ZooKeeperInstance(instanceName, zookeepers).getConnector(username, new PasswordToken(password)));
+    this(Accumulo.newClient().to(instanceName,zookeepers).as(username,password).build());
   }
-  public TriangleIngestor(final Connector connector) {
+  public TriangleIngestor(final AccumuloClient connector) {
     this.connector = connector;
   }
 

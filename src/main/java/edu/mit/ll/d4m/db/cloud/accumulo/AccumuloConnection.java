@@ -11,17 +11,20 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Instance;
+
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.accumulo.core.client.impl.ClientContext;
-import org.apache.accumulo.core.client.impl.Credentials;
+import org.apache.accumulo.core.clientImpl.ClientContext;
+import org.apache.accumulo.core.clientImpl.Credentials;
 import org.apache.accumulo.core.client.impl.MasterClient;
 import org.apache.accumulo.core.client.impl.Tables;
 import org.apache.accumulo.core.client.impl.TabletLocator;
@@ -30,13 +33,15 @@ import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
-import org.apache.accumulo.core.master.thrift.MasterClientService;
+//import org.apache.accumulo.core.master.thrift.MasterClientService;
+import org.apache.accumulo.core.manager.thrift.ManagerClientService;
 import org.apache.accumulo.core.rpc.ThriftUtil;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.security.thrift.TCredentials;
-import org.apache.accumulo.core.tabletserver.thrift.TabletClientService;
+import org.apache.accumulo.core.tabletserver.thrift.TabletServerClientService;
 import org.apache.accumulo.core.util.AddressUtil;
-import org.apache.accumulo.core.util.HostAndPort;
+//import org.apache.accumulo.core.util.HostAndPort;
+import com.google.common.net.HostAndPort;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +69,9 @@ public class AccumuloConnection {
 	private static final Logger log = LoggerFactory.getLogger(AccumuloConnection.class);
 
 	private ConnectionProperties conn=null;
-	private ZooKeeperInstance instance=null;
-	private Connector connector= null;
+	private AccumuloClient connector= null;
+	//private ZooKeeperInstance instance=null;
+	//private Connector connector= null;
 	private Authorizations auth= Authorizations.EMPTY;
 	public static final long maxMemory= 1024000L;
 	public static final long maxLatency = 30;
@@ -78,14 +84,16 @@ public class AccumuloConnection {
 	 */
 	public AccumuloConnection(ConnectionProperties conn) throws AccumuloException,AccumuloSecurityException {
 		this.conn = conn;
-		ClientConfiguration cconfig = new ClientConfiguration().withInstance(conn.getInstanceName()).withZkHosts(conn.getHost()).withZkTimeout(conn.getSessionTimeOut());
-		this.instance = new ZooKeeperInstance(cconfig);
+		//ClientConfiguration cconfig = new ClientConfiguration().withInstance(conn.getInstanceName()).withZkHosts(conn.getHost()).withZkTimeout(conn.getSessionTimeOut());
+		//this.instance = new ZooKeeperInstance(cconfig);
+		this.connector  = Accumulo.newClient().to(this.conn.getInstanceName(), this.conn.getHost())
+        .as(this.conn.getHost(), this.conn.getPass()).build().build();
 		principal = conn.getUser();
 		token = new PasswordToken(conn.getPass());
 
         //principal = username = this.conn.getUser()
         //System.out.println("about to make connector: user="+this.conn.getUser()+"   password="+ new String(this.passwordToken.getPassword()));
-        this.connector = this.instance.getConnector(this.conn.getUser(), token);
+        
         //System.out.println("made connector");
         String [] sAuth = conn.getAuthorizations();
         if (sAuth != null && sAuth.length > 0) {
@@ -154,12 +162,12 @@ public class AccumuloConnection {
 		return connector.getInstance();
 	}
 
-	public MasterClientService.Client getMasterClient() throws TTransportException {
+	public ManagerClientService.Client getMasterClient() throws TTransportException {
 		//${accumulo.VERSION.1.6}return MasterClient.getConnection(getInstance()); // 1.6
     return MasterClient.getConnection(new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration())); // 1.7
 	}
 
-	public TabletClientService.Iface getTabletClient (String tserverAddress) throws TTransportException {
+	public TabletServerClientService.Iface getTabletClient (String tserverAddress) throws TTransportException {
 		HostAndPort address = AddressUtil.parseAddress(tserverAddress,false);
     //${accumulo.VERSION.1.6}return ThriftUtil.getTServerClient( tserverAddress, instance.getConfiguration()); // 1.6
     return ThriftUtil.getTServerClient( address, new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration())); // 1.7

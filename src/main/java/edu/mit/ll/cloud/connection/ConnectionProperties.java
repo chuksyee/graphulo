@@ -1,5 +1,6 @@
 package edu.mit.ll.cloud.connection;
 
+
 public class ConnectionProperties {
 
 	private String host;
@@ -15,7 +16,7 @@ public class ConnectionProperties {
     
 	public ConnectionProperties(String host, String user, String pass,
 			String instanceName, String[] authorizations) {
-		this.host = host;
+		this.host = host; //Zookeeper host eg host:port
 		this.user = user;
 		this.pass = pass;
 		this.instanceName = instanceName;
@@ -31,7 +32,7 @@ public class ConnectionProperties {
 	}
 
 	/**
-	 * @return the host
+	 * @return the Zookeeper host
 	 */
 	public String getHost() {
 		return host;
@@ -39,7 +40,7 @@ public class ConnectionProperties {
 
 	/**
 	 * @param host
-	 *            the host to set
+	 *            the Zookeeper host to set
 	 */
 	public void setHost(String host) {
 		this.host = host;
@@ -101,14 +102,16 @@ public class ConnectionProperties {
 	   return s;
    }
 
-public int getSessionTimeOut() {
-	return sessionTimeOut;
-}
+   public int getSessionTimeOut() {
+	   return sessionTimeOut;
+   }
 
-public void setSessionTimeOut(int sessionTimeOut) {
-	this.sessionTimeOut = sessionTimeOut;
+   public void setSessionTimeOut(int sessionTimeOut) {
+	   this.sessionTimeOut = sessionTimeOut;
+   }
+
+
 }
- }
 /*
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
  * % D4M: Dynamic Distributed Dimensional Data Model 
