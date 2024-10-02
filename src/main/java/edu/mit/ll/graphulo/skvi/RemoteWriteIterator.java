@@ -11,13 +11,16 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.Instance;
+//import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+
 import org.apache.accumulo.core.client.MultiTableBatchWriter;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.ByteSequence;
@@ -30,9 +33,12 @@ import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.OptionDescriber;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.security.ColumnVisibility;
-import org.apache.accumulo.core.trace.Trace;
+import org.apache.accumulo.core.trace.TraceUtil;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
+//import org.apache.accumulo.core.trace.Trace;
 import org.apache.hadoop.io.Text;
-import org.apache.htrace.TraceScope;
+//import org.apache.htrace.TraceScope;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -446,13 +452,16 @@ public class RemoteWriteIterator implements OptionDescriber, SortedKeyValueItera
     while (numToSkip-- > 0 && rowRangeIterator.hasNext())
       rowRangeIterator.next();
 
-    TraceScope scope = org.apache.htrace.Trace.startSpan("RWI seek");
-    if (Trace.isTracing())
-      scope.getSpan().addKVAnnotation(SEEK_RANGE, range.toString().getBytes(StandardCharsets.UTF_8));
-    try {
+    Span span = TraceUtil.startSpan(this.getClass(), "graphulo.skvi.RemoteWriterIterator.seek");
+    //TraceScope scope = org.apache.htrace.Trace.startSpan("RWI seek");
+    //if (Trace.isTracing())
+    //  scope.getSpan().addKVAnnotation(SEEK_RANGE, range.toString().getBytes(StandardCharsets.UTF_8));
+    //try {
+    try (Scope scope = span.makeCurrent()) {
       writeWrapper(true/*, initialSeek*/);
     } finally {
-      scope.close();
+      //scope.close();
+      span.end();
     }
   }
 

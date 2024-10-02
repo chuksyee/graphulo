@@ -10,6 +10,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
+import org.apache.accumulo.core.client.lexicoder.Encoder;
 import org.apache.hadoop.io.Text;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -41,7 +42,7 @@ public class UpperTriTwoJoin implements RowMultiplyOp {
   }
 
 
-  private static final TypedValueCombiner.Encoder<Integer> LEX = new UIntegerLexicoder();
+  private static final Encoder<Integer> LEX = new UIntegerLexicoder();
   private static final byte[] ZERO_BYTE = new byte[] { 0x00 };
   private static final Value VALUE_TWO = new Value(LEX.encode(2));
   private static final Value VALUE_TWO_MAGIC = new Value(Ints.toByteArray(2));

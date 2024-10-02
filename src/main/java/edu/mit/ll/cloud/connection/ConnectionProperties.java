@@ -1,6 +1,6 @@
 package edu.mit.ll.cloud.connection;
 
-
+import java.util.Properties;
 public class ConnectionProperties {
 
 	private String host;
@@ -110,7 +110,16 @@ public class ConnectionProperties {
 	   this.sessionTimeOut = sessionTimeOut;
    }
 
-
+   public Properties getProperties() {
+       Properties props = new Properties();
+       props.setProperty("instance.name", this.instanceName);
+       props.setProperty("instance.zookeepers", this.host);
+       props.setProperty("instance.zookeepers.timeout", new String(this.sessionTimeOut));
+	   props.setProperty("auth.type", "password");
+	   props.setProperty("auth.principal", this.user);
+	   props.setProperty("auth.token", this.pass);
+	   return props;
+   }
 }
 /*
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 

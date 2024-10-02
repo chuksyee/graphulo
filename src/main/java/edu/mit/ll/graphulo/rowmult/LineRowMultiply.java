@@ -10,6 +10,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
+import org.apache.accumulo.core.client.lexicoder.Encoder;
 import org.apache.accumulo.core.iterators.user.BigDecimalCombiner;
 import org.apache.hadoop.io.WritableComparator;
 //import org.apache.log4j.LogManager;
@@ -147,7 +148,7 @@ public class LineRowMultiply implements RowMultiplyOp {
     return true;
   }
 
-  private static final TypedValueCombiner.Encoder<BigDecimal> DECIMAL_ENCODER = new BigDecimalCombiner.BigDecimalEncoder();
+  private static final Encoder<BigDecimal> DECIMAL_ENCODER = new BigDecimalCombiner.BigDecimalEncoder();
   private static double sumValues(SortedMap<Key,Value> map) {
     BigDecimal d = new BigDecimal(0);
     for (Value value : map.values()) {

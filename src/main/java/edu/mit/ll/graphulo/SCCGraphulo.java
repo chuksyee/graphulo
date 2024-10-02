@@ -65,7 +65,7 @@ public class SCCGraphulo extends Graphulo {
     if (rowCount <= 1)
       throw new IllegalArgumentException("Table too small.");
 
-    TableOperations tops = connector.tableOperations();
+    TableOperations tops = this.client.tableOperations();
     String tA = Atable;
     String tAC = Atable + "_Copy";
     String tAT = Atable + "_Transpose";
@@ -86,7 +86,7 @@ public class SCCGraphulo extends Graphulo {
         if (trace) {
           // TESTING
           System.out.println("Writing to tAC:");
-          Scanner scannertAC = connector.createScanner(tAC, Authorizations.EMPTY);
+          Scanner scannertAC = this.client.createScanner(tAC, Authorizations.EMPTY);
           scannertAC.setRange(new Range());
           for (Map.Entry<Key,Value> entry : scannertAC) {
             printer.put(entry.getKey(), entry.getValue());
@@ -106,7 +106,7 @@ public class SCCGraphulo extends Graphulo {
         if (trace) {
           // TESTING
           System.out.println("Writing to tAT:");
-          Scanner scannertAT = connector.createScanner(tAT, Authorizations.EMPTY);
+          Scanner scannertAT = this.client.createScanner(tAT, Authorizations.EMPTY);
           scannertAT.setRange(new Range());
           for (Map.Entry<Key,Value> entry : scannertAT) {
             printer.put(entry.getKey(), entry.getValue());
@@ -127,7 +127,7 @@ public class SCCGraphulo extends Graphulo {
     if (trace) {
       // TESTING
       System.out.println("Getting tR:");
-      Scanner scannertR = connector.createScanner(tR, Authorizations.EMPTY);
+      Scanner scannertR = this.client.createScanner(tR, Authorizations.EMPTY);
       scannertR.setRange(new Range());
       for (Map.Entry<Key,Value> entry : scannertR) {
         printer.put(entry.getKey(), entry.getValue());
@@ -139,7 +139,7 @@ public class SCCGraphulo extends Graphulo {
       printer.clear();
 
       System.out.println("Getting tRT:");
-      Scanner scannertRT = connector.createScanner(tRT, Authorizations.EMPTY);
+      Scanner scannertRT = this.client.createScanner(tRT, Authorizations.EMPTY);
       scannertRT.setRange(new Range());
       for (Map.Entry<Key,Value> entry : scannertRT) {
         printer.put(entry.getKey(), entry.getValue());
@@ -180,7 +180,7 @@ public class SCCGraphulo extends Graphulo {
     if (vertex == null) {
       StringBuilder midstr = new StringBuilder();
       Set<String> vertset = new HashSet<>();
-      Scanner scanner = connector.createScanner(tA, Authorizations.EMPTY);
+      Scanner scanner = this.client.createScanner(tA, Authorizations.EMPTY);
       Text tmp = new Text();
       for (Map.Entry<Key,Value> entry : scanner) {
         midstr.append(entry.getKey().getRow(tmp).toString()).append(" ");

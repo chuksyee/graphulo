@@ -17,6 +17,7 @@ import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.accumulo.core.client.lexicoder.Encoder;
 import org.apache.hadoop.io.Text;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -75,8 +76,8 @@ public class DistanceRowMult implements RowMultiplyOp {
     scanDegreeTable();
   }
 
-  private static final TypedValueCombiner.Encoder<Long> LEX = new LongLexicoder();
-  private static final TypedValueCombiner.Encoder<Double> LEXDOUBLE = new DoubleLexicoderTemp(); // attempt 1.6 compat
+  private static final Encoder<Long> LEX = new LongLexicoder();
+  private static final Encoder<Double> LEXDOUBLE = new DoubleLexicoderTemp(); // attempt 1.6 compat
   private static final byte[] ZERO_BYTE = new byte[] { 0x00 };
 
   @Override

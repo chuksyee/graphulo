@@ -7,7 +7,7 @@ import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
 import org.apache.accumulo.core.iterators.ValueFormatException;
-
+import org.apache.accumulo.core.client.lexicoder.Encoder;
 import java.io.IOException;
 import java.util.Map;
 

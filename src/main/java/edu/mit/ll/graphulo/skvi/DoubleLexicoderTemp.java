@@ -1,7 +1,7 @@
 package edu.mit.ll.graphulo.skvi;
 
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
-
+import org.apache.accumulo.core.client.lexicoder.Encoder;
 import static edu.mit.ll.graphulo.skvi.LongLexicoderTemp.decodeLongUnchecked;
 import static edu.mit.ll.graphulo.skvi.LongLexicoderTemp.encodeLong;
 
@@ -10,7 +10,7 @@ import static edu.mit.ll.graphulo.skvi.LongLexicoderTemp.encodeLong;
  *
  * Temporary stand-in for Accumulo server 1.6.0 compatibility
  */
-public class DoubleLexicoderTemp implements TypedValueCombiner.Encoder<Double> {
+public class DoubleLexicoderTemp implements Encoder<Double> {
 
   @Override
   public byte[] encode(Double d) {

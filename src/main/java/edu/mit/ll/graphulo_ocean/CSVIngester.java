@@ -2,11 +2,13 @@ package edu.mit.ll.graphulo_ocean;
 
 import com.google.common.base.Preconditions;
 import edu.mit.ll.graphulo.util.StatusLogger;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -32,9 +34,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class CSVIngester {
   private static final Logger log = LoggerFactory.getLogger(CSVIngester.class);
 
-  private Connector connector;
+  private AccumuloClient connector;
 
-  public CSVIngester(Connector connector) {
+  public CSVIngester(AccumuloClient connector) {
     this.connector = connector;
   }
 

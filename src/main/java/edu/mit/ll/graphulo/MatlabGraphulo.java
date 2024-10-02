@@ -10,14 +10,17 @@ import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.security.ColumnVisibility;
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 //import org.apache.log4j.xml.DOMConfigurator;
@@ -43,7 +46,9 @@ public class MatlabGraphulo extends Graphulo {
 
   public MatlabGraphulo(String instanceName, String zookeepers, String username, String password)
       throws AccumuloSecurityException, AccumuloException {
-    super(new ZooKeeperInstance(instanceName, zookeepers).getConnector(username, new PasswordToken(password)), new PasswordToken(password));
+    //super(new ZooKeeperInstance(instanceName, zookeepers).getConnector(username, new PasswordToken(password)), new PasswordToken(password));
+    super(Accumulo.newClient().to(instanceName, zookeepers).as(username,password).build(), new PasswordToken(password) );
+    //Accumulo.newClient().to(this.conn.getInstanceName(), this.conn.getHost()).as(this.conn.getUser(), this.conn.getPass()).build()
   }
 
   public long TableMult(String ATtable, String Btable, String Ctable) {
@@ -90,7 +95,7 @@ public class MatlabGraphulo extends Graphulo {
 
   public void CancelCompact(String table) throws AccumuloSecurityException, TableNotFoundException, AccumuloException {
 //    try {
-      connector.tableOperations().cancelCompaction(table);
+      this.client.tableOperations().cancelCompaction(table);  //connector.tableOperations().cancelCompaction(table);
 //    } catch (AccumuloException | AccumuloSecurityException e) {
 //      log.error("error trying to cancel compaction for " + table, e);
 //    } catch (TableNotFoundException e) {
@@ -102,7 +107,7 @@ public class MatlabGraphulo extends Graphulo {
   public void Compact(String table) throws AccumuloSecurityException, TableNotFoundException, AccumuloException {
     System.out.println("Compacting " + table + "...");
 //    try {
-      connector.tableOperations().compact(table, null, null, true, true);
+      this.client.tableOperations().compact(table, null, null, true, true); //connector.tableOperations().compact(table, null, null, true, true);
 //    } catch (AccumuloException | AccumuloSecurityException e) {
 //      log.error("error trying to compact " + table, e);
 //    } catch (TableNotFoundException e) {
@@ -113,14 +118,14 @@ public class MatlabGraphulo extends Graphulo {
   public void CloneTable(String t1, String t2, boolean logDur)throws TableExistsException, AccumuloSecurityException, TableNotFoundException, AccumuloException {
     System.out.println("Clone " + t1 + " to "+t2);
     Map<String,String> propsToSet = logDur ? Collections.singletonMap("table.durability", "log") : null;
-    connector.tableOperations().clone(t1, t2, true, propsToSet, null);
+    this.client.tableOperations().clone(t1, t2, true, propsToSet, null);  //connector.tableOperations().clone(t1, t2, true, propsToSet, null);
   }
 
   /** Flush a table, writing entries in memory to disk. */
   public void Flush(String table) throws AccumuloSecurityException, AccumuloException, TableNotFoundException {
     System.out.println("Flushing " + table + "...");
 //    try {
-      connector.tableOperations().flush(table, null, null, true);
+      this.client.tableOperations().flush(table, null, null, true); //connector.tableOperations().flush(table, null, null, true);
 //    } catch (AccumuloException | AccumuloSecurityException e) {
 //      log.error("error trying to compact " + table, e);
 //    } catch (TableNotFoundException e) {
@@ -129,13 +134,13 @@ public class MatlabGraphulo extends Graphulo {
   }
 
   public boolean Exists(String table) {
-    return connector.tableOperations().exists(table);
+    return this.client.tableOperations().exists(table);  //connector.tableOperations().exists(table);
   }
 
   public void PrintTable(String table) throws TableNotFoundException {
     Scanner scanner;
 //    try {
-      scanner = connector.createScanner(table, Authorizations.EMPTY);
+      scanner = client.createScanner(table, Authorizations.EMPTY);  //connector.createScanner(table, Authorizations.EMPTY);
 //    } catch (TableNotFoundException e) {
 //      log.error("error scaning table "+table, e);
 //      throw new RuntimeException(e);
@@ -150,7 +155,7 @@ public class MatlabGraphulo extends Graphulo {
   public void PrintTableDebug(String table) throws TableNotFoundException {
     Scanner scanner;
 //    try {
-      scanner = connector.createScanner(table, Authorizations.EMPTY);
+      scanner = this.client.createScanner(table, Authorizations.EMPTY); //connector.createScanner(table, Authorizations.EMPTY);
 //    } catch (TableNotFoundException e) {
 //      log.error("error scaning table "+table, e);
 //      throw new RuntimeException(e);
@@ -165,17 +170,17 @@ public class MatlabGraphulo extends Graphulo {
   }
 
   public void ApplyIteratorAll(String table, IteratorSetting itset) {
-    GraphuloUtil.applyIteratorSoft(itset, connector.tableOperations(), table);
+    GraphuloUtil.applyIteratorSoft(itset, this.client.tableOperations(), table);  //GraphuloUtil.applyIteratorSoft(itset, connector.tableOperations(), table);
   }
 
   public void ApplyIteratorScan(String table, IteratorSetting itset) {
     GraphuloUtil.addOnScopeOption(itset, EnumSet.of(IteratorUtil.IteratorScope.scan));
-    GraphuloUtil.applyIteratorSoft(itset, connector.tableOperations(), table);
+    GraphuloUtil.applyIteratorSoft(itset, this.client.tableOperations(), table);  //GraphuloUtil.applyIteratorSoft(itset, connector.tableOperations(), table);
   }
 
   public void RemoveIterator(String table, IteratorSetting itset) throws AccumuloSecurityException, AccumuloException, TableNotFoundException {
 //    try {
-      connector.tableOperations().removeIterator(table, itset.getName(), EnumSet.allOf(IteratorUtil.IteratorScope.class));
+      this.client.tableOperations().removeIterator(table, itset.getName(), EnumSet.allOf(IteratorUtil.IteratorScope.class));  //connector.tableOperations().removeIterator(table, itset.getName(), EnumSet.allOf(IteratorUtil.IteratorScope.class));
 //    } catch (AccumuloSecurityException | AccumuloException | TableNotFoundException e) {
 //      log.error("Problem removing iterator "+itset+" from table "+table, e);
 //    }
@@ -183,7 +188,7 @@ public class MatlabGraphulo extends Graphulo {
 
   public void SetConfig(String table, String key, String value) throws AccumuloSecurityException, AccumuloException {
 //    try {
-      connector.tableOperations().setProperty(table, key, value);
+      this.client.tableOperations().setProperty(table, key, value);  //connector.tableOperations().setProperty(table, key, value);
 //    } catch (AccumuloException | AccumuloSecurityException e) {
 //      log.error("problem setting table :: key :: value ==> "+table+" :: "+key+" :: "+value, e);
 //    }

@@ -24,21 +24,21 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.KeyExtent;
+import org.apache.accumulo.core.dataImpl.KeyExtent;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.Combiner;
 import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
 import org.apache.accumulo.core.iterators.LongCombiner;
 import org.apache.accumulo.core.iterators.TypedValueCombiner;
-import org.apache.accumulo.core.iterators.conf.ColumnSet;
+import org.apache.accumulo.core.iteratorsImpl.conf.ColumnSet;
 import org.apache.accumulo.core.manager.thrift.ManagerClientService;
 import org.apache.accumulo.core.manager.thrift.ManagerMonitorInfo;
 import org.apache.accumulo.core.manager.thrift.TabletServerStatus;
 import org.apache.accumulo.core.rpc.ThriftUtil;
 import org.apache.accumulo.core.tabletserver.thrift.TabletServerClientService;
 import org.apache.accumulo.core.tabletserver.thrift.TabletStats;
-import org.apache.accumulo.core.trace.thrift.TInfo;
+import org.apache.accumulo.core.clientImpl.thrift.TInfo;
 import org.apache.accumulo.core.util.ColumnFQ;
 import org.apache.accumulo.core.util.Pair;
 import org.apache.hadoop.io.Text;
@@ -142,14 +142,14 @@ public class AccumuloTableOperations {
 
 	private ArrayList<TabletServerStatus> getTabletServers() throws TException {
 		ArrayList<TabletServerStatus> list = new ArrayList<>();// list of TServer info
-		MasterClientService.Client client=null;
+		ManagerClientService.Client client=null;
 		//		MasterClientService.Iface client=null;
 		try {
 			client = this.connection.getMasterClient();
 			//changed in accumulo-1.4
 			//			mmi = client.getMasterStats(null, getAuthInfo());
 			TInfo tinfo = new TInfo();
-			MasterMonitorInfo mmi = client.getMasterStats(tinfo,this.connection.getCredentials() );
+			ManagerMonitorInfo mmi = client.getManagerStats(tinfo,this.connection.getCredentials() );
 
 			list.addAll(mmi.getTServerInfo());
 		} catch(D4mException e) {
@@ -534,9 +534,10 @@ public class AccumuloTableOperations {
 
 		for (final Entry<Key, Value> next : scanner) {
 			if (METADATA_PREV_ROW_COLUMN.hasColumns(next.getKey())) { // may not be necessary
-				KeyExtent extent = new KeyExtent(next.getKey().getRow(), next.getValue());
-				final Text pr = extent.getPrevEndRow();
-				final Text er = extent.getEndRow();
+				//KeyExtent extent = new KeyExtent(next.getKey().getRow(), next.getValue());
+				KeyExtent extent = KeyExtent.fromMetaPrevRow(next);
+				final Text pr = extent.prevEndRow();
+				final Text er = extent.endRow();
 
 				final ByteBuffer prb = pr == null ? null : ByteBuffer.wrap(pr.getBytes());
 				final ByteBuffer erb = er == null ? null : ByteBuffer.wrap(er.getBytes());

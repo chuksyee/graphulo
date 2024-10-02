@@ -213,7 +213,7 @@ public abstract class CSVIngesterKmer<T> {
 
     public static class VariableMap extends IngestIntoAccumulo<SortedMap<ArrayHolder, Integer>> {
 
-      public VariableMap(Connector connector, String atable, String oTsampleDegree, boolean alsoIngestReverseComplement, boolean alsoIngestSmallerLex, int k) {
+      public VariableMap(AccumuloClient connector, String atable, String oTsampleDegree, boolean alsoIngestReverseComplement, boolean alsoIngestSmallerLex, int k) {
         super(connector, atable, oTsampleDegree, alsoIngestReverseComplement, alsoIngestSmallerLex, k);
       }
 
@@ -234,7 +234,7 @@ public abstract class CSVIngesterKmer<T> {
 
     public static class IntegerMap extends IngestIntoAccumulo<int[]> {
 
-      public IntegerMap(Connector connector, String atable, String oTsampleDegree, boolean alsoIngestReverseComplement, boolean alsoIngestSmallerLex, int k) {
+      public IntegerMap(AccumuloClient connector, String atable, String oTsampleDegree, boolean alsoIngestReverseComplement, boolean alsoIngestSmallerLex, int k) {
         super(connector, atable, oTsampleDegree, alsoIngestReverseComplement, alsoIngestSmallerLex, k);
       }
 

@@ -93,7 +93,8 @@ import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 import org.apache.accumulo.core.metadata.MetadataTable;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.security.ColumnVisibility;
-import org.apache.accumulo.core.trace.DistributedTrace;
+import org.apache.accumulo.core.trace.TraceUtil;
+//import org.apache.accumulo.core.trace.DistributedTrace;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
 import org.apache.commons.math3.linear.DefaultRealMatrixPreservingVisitor;
@@ -101,9 +102,18 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealMatrixChangingVisitor;
 import org.apache.hadoop.io.Text;
-import org.apache.htrace.Sampler;
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
+//import org.apache.htrace.Sampler;
+//import org.apache.htrace.Trace;
+//import org.apache.htrace.TraceScope;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
+//import io.opentelemetry.sdk.resources.Resource;
+//import io.opentelemetry.sdk.trace.SdkTracerProvider;
+//import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+//import io.opentelemetry.sdk.OpenTelemetrySdk;
+//import io.opentelemetry.api.OpenTelemetry;
+//import io.opentelemetry.api.trace.Tracer;
+//import io.opentelemetry.api.GlobalOpenTelemetry;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -123,6 +133,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -938,7 +949,7 @@ public class Graphulo {
       try {
         bs = this.client.createBatchScanner(Atable, Authorizations.EMPTY, 50); // TODO P2: set number of batch scan threads
       } catch (TableNotFoundException e) {
-        log.error("crazy", e);
+        log.error(Atable, e);
         throw new RuntimeException(e);
       }
     if (useRWI || rowFilter == null) bs.setRanges(Collections.singleton(new Range()));
@@ -1148,13 +1159,17 @@ public class Graphulo {
     try {
       long degTime = 0, scanTime = 0;
       for (int thisk = 1; thisk <= k; thisk++) {
-        if (Trace.isTracing())
+        Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {
+        //if (Trace.isTracing())
           if (thisk == 1)
             log.debug("First step: v0 is " + v0);
           else
             log.debug("k=" + thisk + " before filter" +
                 (vk.size() > 5 ? " #=" + String.valueOf(vk.size()) : ": " + vk.toString()));
-
+        } finally {
+          span.end();
+        }
         iteratorSettingList.clear();
         String rowFilter;
 
@@ -1164,10 +1179,15 @@ public class Graphulo {
                     thisk == 1 ? GraphuloUtil.d4mRowToRanges(v0) : GraphuloUtil.stringsToRanges(vk));
           dur = System.currentTimeMillis() - t1;
           degTime += dur;
-          if (Trace.isTracing()) {
+          span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+          try (Scope scope = span.makeCurrent()) {
+          //if (Trace.isTracing()) {
             log.debug("Degree Lookup Time: " + dur + " ms");
             log.debug("k=" + thisk + " after  filter" +
                 (vk.size() > 5 ? " #=" + String.valueOf(vk.size()) : ": " + vk.toString()));
+          //}
+          } finally {
+            span.end();
           }
 
           if (vk.isEmpty())
@@ -1207,15 +1227,27 @@ public class Graphulo {
         vk.addAll(reducer.getSerializableForClient());
         if (allReachedNodes != null)
           allReachedNodes.addAll(vk);
-        if (Trace.isTracing())
+
+        span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {
+        
+        //if (Trace.isTracing())
           log.debug("BatchScan/Iterator Time: " + dur + " ms");
+        } finally {
+          span.end();
+        }
         if (vk.isEmpty())
           break;
       }
+      Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
 
-      if (Trace.isTracing()) {
+      //if (Trace.isTracing()) {
         log.debug("Total Degree Lookup Time: " + degTime + " ms");
         log.debug("Total BatchScan/Iterator Time: " + scanTime + " ms");
+      //}
+      } finally {
+        span.end();
       }
     } finally {
       bs.close();
@@ -1453,12 +1485,19 @@ public class Graphulo {
     try {
       long degTime = 0, scanTime = 0;
       for (int thisk = 1; thisk <= k; thisk++) {
-        if (Trace.isTracing())
+
+        Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {
+  
+        //if (Trace.isTracing())
           if (thisk == 1)
             log.debug("First step: v0 is " + v0);
           else
             log.debug("k=" + thisk + " before filter" +
                 (vk.size() > 5 ? " #=" + String.valueOf(vk.size()) : ": " + vk.toString()));
+        } finally {
+          span.end();
+        }
 
         if (needDegreeFiltering) { // use degree table
           long t1 = System.currentTimeMillis(), dur;
@@ -1466,10 +1505,16 @@ public class Graphulo {
               thisk == 1 ? GraphuloUtil.d4mRowToRanges(v0) : GraphuloUtil.stringsToRanges(vk));
           dur = System.currentTimeMillis() - t1;
           degTime += dur;
-          if (Trace.isTracing()) {
+          span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+          try (Scope scope = span.makeCurrent()) {
+    
+          //if (Trace.isTracing()) {
             log.debug("Degree Lookup Time: " + dur + " ms");
             log.debug("k=" + thisk + " after  filter" +
                 (vk.size() > 5 ? " #=" + String.valueOf(vk.size()) : ": " + vk.toString()));
+          //}
+          } finally {
+            span.end();
           }
 
           if (vk.isEmpty())
@@ -1512,15 +1557,25 @@ public class Graphulo {
         vk.addAll(reducer.getSerializableForClient());
         if (allReachedNodes != null)
           allReachedNodes.addAll(vk);
-        if (Trace.isTracing())
+        span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {     
+        //if (Trace.isTracing())
           log.debug("BatchScan/Iterator Time: " + dur + " ms");
+        } finally {
+          span.end();
+        }
         if (vk.isEmpty())
           break;
       }
+      Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
 
-      if (Trace.isTracing()) {
+      //if (Trace.isTracing()) {
         log.debug("Total Degree Lookup Time: " + degTime + " ms");
         log.debug("Total BatchScan/Iterator Time: " + scanTime + " ms");
+      //}
+      } finally {
+        span.end();
       }
     } finally {
       bs.close();
@@ -1809,13 +1864,18 @@ public class Graphulo {
     try {
       long degTime = 0, scanTime = 0;
       for (int thisk = 1; thisk <= k; thisk++) {
-        if (Trace.isTracing())
+        Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {
+  
+        //if (Trace.isTracing())
           if (thisk == 1)
             log.debug("First step: v0 is " + v0);
           else
             log.debug("k=" + thisk + " before filter" +
                 (vktexts.size() > 5 ? " #=" + String.valueOf(vktexts.size()) : ": " + vktexts.toString()));
-
+        } finally {
+          span.end();
+        }
         String rowFilter;
         if (needDegreeFiltering /*&& SDegtable != null*/) { // use degree table
           long t1 = System.currentTimeMillis(), dur;
@@ -1823,10 +1883,16 @@ public class Graphulo {
               thisk == 1 ? GraphuloUtil.d4mRowToRanges(v0) : GraphuloUtil.stringsToRanges(vktexts));
           dur = System.currentTimeMillis() - t1;
           degTime += dur;
-          if (Trace.isTracing()) {
+          span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+          try (Scope scope = span.makeCurrent()) {
+    
+          //if (Trace.isTracing()) {
             log.debug("Degree Lookup Time: " + dur + " ms");
             log.debug("k=" + thisk + " after  filter" +
                 (vktexts.size() > 5 ? " #=" + String.valueOf(vktexts.size()) : ": " + vktexts.toString()));
+          //}
+          } finally {
+            span.end();
           }
 
           if (vktexts.isEmpty())
@@ -1873,19 +1939,31 @@ public class Graphulo {
 
         vktexts.clear();
         vktexts.addAll(reducer.getSerializableForClient());
-        if (Trace.isTracing())
+        span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {
+  
+        //if (Trace.isTracing())
           log.debug("BatchScan/Iterator Time: " + dur + " ms");
+        } finally {
+          span.end();
+        }
+
         if (vktexts.isEmpty())
           break;
         if (allInNodes != null)
           allInNodes.addAll(vktexts);
       }
 
-      if (Trace.isTracing()) {
+      Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
+
+      //if (Trace.isTracing()) {
         log.debug("Total Degree Lookup Time: " + degTime + " ms");
         log.debug("Total BatchScan/Iterator Time: " + scanTime + " ms");
+      //}
+      } finally {
+        span.end();
       }
-
     } finally {
       bs.close();
       if (bsDegree != null)
@@ -3623,7 +3701,7 @@ public class Graphulo {
     if (prefix == null) prefix = "";
     Map<String,String> opt = new HashMap<>();
     String instance = this.client.instanceOperations().getInstanceId().canonical();
-    String zookeepers = this.client.getInstance().getZooKeepers();
+    String zookeepers = this.getZooKeepers();
     String user = this.client.whoami();
     opt.put(prefix+RemoteSourceIterator.ZOOKEEPERHOST, zookeepers);
     opt.put(prefix + RemoteSourceIterator.INSTANCENAME, instance);
@@ -3735,9 +3813,16 @@ public class Graphulo {
         .append(new IteratorSetting(1, VersioningIterator.class))       // only count a row once
         .append(RandomTopicApply.iteratorSetting(1, K))
         .getIteratorSettingList();
-    try (TraceScope scope = Trace.startSpan("nmfCreateRandW", Sampler.ALWAYS)) {
+    
+    Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+    try (Scope scope = span.makeCurrent()) {
+  
+    //try (TraceScope scope = Trace.startSpan("nmfCreateRandW", Sampler.ALWAYS)) {
       long NK = OneTable(Aorig, Wfinal, WTfinal, null, -1, null, null, null, null, null, itCreateTopicList, null,
           Authorizations.EMPTY);
+    //}
+    } finally {
+      span.end();
     }
 
     boolean DBG = false;
@@ -3766,21 +3851,39 @@ public class Graphulo {
       { String  t = Hfinal; Hfinal = Hprev; Hprev = t;
                 t = HTfinal; HTfinal = HTprev; HTprev = t;}
 
-      try (TraceScope scope = Trace.startSpan("nmfStepToH", Sampler.ALWAYS)) {
+      span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
+          
+      //try (TraceScope scope = Trace.startSpan("nmfStepToH", Sampler.ALWAYS)) {
         nmfStep(K, Wfinal, Aorig, Hfinal, HTfinal, Ttmp1, Ttmp2, cutoffThreshold, maxColsPerTopic);
+      //}
+      } finally {
+        span.end();
       }
+
       if (DBG)
         DebugUtil.printTable(numiter + ": H is KxM:", this.client, Hfinal, 5);
-      try (TraceScope scope = Trace.startSpan("nmfStepToW", Sampler.ALWAYS)) {
+
+      span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
+      //try (TraceScope scope = Trace.startSpan("nmfStepToW", Sampler.ALWAYS)) {
         nmfStep(K, HTfinal, ATorig, WTfinal, Wfinal, Ttmp1, Ttmp2, cutoffThreshold, -1);
+      //}
+      } finally {
+        span.end();
       }
       if (DBG)
-        DebugUtil.printTable(numiter + ": W is NxK:", connector, Wfinal, 5);
+        DebugUtil.printTable(numiter + ": W is NxK:", client, Wfinal, 5);  //DebugUtil.printTable(numiter + ": W is NxK:", connector, Wfinal, 5);
 
       if (numiter > 1) {
-        try (TraceScope scope = Trace.startSpan("nmfHDiff", Sampler.ALWAYS)) {
+        span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+        try (Scope scope = span.makeCurrent()) {
+       //try (TraceScope scope = Trace.startSpan("nmfHDiff", Sampler.ALWAYS)) {
           hdiff = nmfHDiff(Hfinal, Hprev);
-//        hdiff = nmfDiffFrobeniusNorm(Aorig, WTfinal, Hfinal, Ttmp1);
+       //        hdiff = nmfDiffFrobeniusNorm(Aorig, WTfinal, Hfinal, Ttmp1);
+        //}
+        } finally {
+        span.end();
         }
         if (hdiff <= 0.01) {
           numLowHDiff++;
@@ -3807,8 +3910,11 @@ public class Graphulo {
       log.debug("ODD  Hprev is " + Hprev);
       deleteTables(Hprev, HTprev);
       try {
-        connector.tableOperations().clone(Hfinal, Hprev, true, null, null);
-        connector.tableOperations().clone(HTfinal, HTprev, true, null, null);
+        //connector.tableOperations().clone(Hfinal, Hprev, true, null, null);
+        //connector.tableOperations().clone(HTfinal, HTprev, true, null, null);
+        this.client.tableOperations().clone(Hfinal, Hprev, true, null, null);
+        this.client.tableOperations().clone(HTfinal, HTprev, true, null, null);
+
       } catch (AccumuloException | AccumuloSecurityException e) {
         log.warn("problem cloning to final table "+Hfinal, e);
         throw new RuntimeException(e);
@@ -3855,9 +3961,13 @@ public class Graphulo {
         MathTwoScalar.class, MathTwoScalar.optionMap(ScalarOp.TIMES, ScalarType.DOUBLE, null, false),
         MathTwoScalar.combinerSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority(), null, ScalarOp.PLUS, ScalarType.DOUBLE, false),
         null, null, null, false, false, null, null, PRESUMITER, null, null, -1, Authorizations.EMPTY, Authorizations.EMPTY);
-    if (Trace.isTracing())
-      DebugUtil.printTable("WH is NxM:", connector, WHtmp, 5);
-
+    Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+    try (Scope scope = span.makeCurrent()) {
+    //if (Trace.isTracing())
+      DebugUtil.printTable("WH is NxM:", this.client, WHtmp, 5); //DebugUtil.printTable("WH is NxM:", connector, WHtmp, 5);
+    } finally {
+      span.end();
+    }
     // Step 2: A - WH => ^2 => ((+all)) => Client w/ Reducer => Sq.Root. => newerr return
     // Prep.
     List<IteratorSetting> iterAfterMinus = new DynamicIteratorSetting(1,null)
@@ -3898,29 +4008,42 @@ public class Graphulo {
     IteratorSetting plusCombiner = MathTwoScalar.combinerSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority(), null, ScalarOp.PLUS, ScalarType.DOUBLE, false);
 
     // Step 1: in1^T * in1 ==transpose==> tmp1
-    try (TraceScope scope = Trace.startSpan("nmf1TableMult")) {
+    Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+    try (Scope scope = span.makeCurrent()) {
+    //try (TraceScope scope = Trace.startSpan("nmf1TableMult")) {
       TableMult(TwoTableIterator.CLONESOURCE_TABLENAME, in1, null, tmp1, -1,
           MathTwoScalar.class, MathTwoScalar.optionMap(ScalarOp.TIMES, ScalarType.DOUBLE, null, false),
           plusCombiner,
           null, null, null, false, false, null, null, PRESUMITER, null, null, -1, Authorizations.EMPTY, Authorizations.EMPTY);
+    //}
+    } finally {
+      span.end();
     }
     if (DBG)
-      DebugUtil.printTable("tmp1 is KxK:", connector, tmp1, 5);
+      DebugUtil.printTable("tmp1 is KxK:", this.client, tmp1, 5);   //DebugUtil.printTable("tmp1 is KxK:", connector, tmp1, 5);
 
     // Step 2: tmp1 => tmp1 inverse.
-    try (TraceScope scope = Trace.startSpan("nmf2Inverse")) {
-      connector.tableOperations().compact(tmp1, null, null,
+    span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+    try (Scope scope = span.makeCurrent()) {
+    //try (TraceScope scope = Trace.startSpan("nmf2Inverse")) {
+      this.client.tableOperations().compact(tmp1, null, null,
           Collections.singletonList(InverseMatrixIterator.iteratorSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority() + 1, K, 100)),
           true, true); // blocks
+
+      //connector.tableOperations().compact(tmp1, null, null,
+      //    Collections.singletonList(InverseMatrixIterator.iteratorSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority() + 1, K, 100)),
+      //    true, true); // blocks
     } catch (AccumuloException | AccumuloSecurityException e) {
       log.error("problem while compacting "+tmp1+" to take the matrix inverse", e);
       throw new RuntimeException(e);
     } catch (TableNotFoundException e) {
       log.error("crazy", e);
       throw new RuntimeException(e);
+    } finally {
+      span.end();
     }
     try {
-      connector.tableOperations().removeIterator(tmp1, plusCombiner.getName(), EnumSet.allOf(IteratorUtil.IteratorScope.class));
+      client.tableOperations().removeIterator(tmp1, plusCombiner.getName(), EnumSet.allOf(IteratorUtil.IteratorScope.class));  //connector.tableOperations().removeIterator(tmp1, plusCombiner.getName(), EnumSet.allOf(IteratorUtil.IteratorScope.class));
     } catch (AccumuloException | AccumuloSecurityException e) {
       log.error("problem while removing " + plusCombiner + " from "+tmp1, e);
       throw new RuntimeException(e);
@@ -3929,14 +4052,18 @@ public class Graphulo {
       throw new RuntimeException(e);
     }
     if (DBG)
-      DebugUtil.printTable("tmp1 INVERSE is KxK:", connector, tmp1, 5);
+      DebugUtil.printTable("tmp1 INVERSE is KxK:", client, tmp1, 5);  //DebugUtil.printTable("tmp1 INVERSE is KxK:", connector, tmp1, 5);
 
     // Step 3: in1^T * in2 => tmp2.  This can run concurrently with step 1 and 2.
-    try (TraceScope scope = Trace.startSpan("nmf3TableMult")) {
+    span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+    try (Scope scope = span.makeCurrent()) {
+    //try (TraceScope scope = Trace.startSpan("nmf3TableMult")) {
       TableMult(in1, in2, tmp2, null, -1,
           MathTwoScalar.class, MathTwoScalar.optionMap(ScalarOp.TIMES, ScalarType.DOUBLE, "", false),
           plusCombiner,
           null, null, null, false, false, null, null, PRESUMITER, null, null, -1, Authorizations.EMPTY, Authorizations.EMPTY);
+    } finally {
+      span.end();
     }
 
 //    if (Trace.isTracing())
@@ -3958,15 +4085,19 @@ public class Graphulo {
     // TopK is kind of like PreSumCache
 
     // Execute.
-    try (TraceScope scope = Trace.startSpan("nmf4TableMult")) {
+    span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+    try (Scope scope = span.makeCurrent()) {
+    //try (TraceScope scope = Trace.startSpan("nmf4TableMult")) {
       TableMult(tmp1, tmp2, out1, out2, -1,
           MathTwoScalar.class, MathTwoScalar.optionMap(ScalarOp.TIMES, ScalarType.DOUBLE, "", false),
           sumFilterOp,
           null, null, null, false, false, null, null,
           PRESUMITER,
           null, null, -1, Authorizations.EMPTY, Authorizations.EMPTY);
+    //}
+    } finally {
+      span.end();
     }
-
     // Delete temporary tables.
     deleteTables(tmp1, tmp2);
   }
@@ -4075,22 +4206,32 @@ public class Graphulo {
       //nmfStep(KMER, Wfinal, Aorig, Hfinal, HTfinal, Ttmp1, Ttmp2, trace);
       // assign to Hmatrix
       HmatrixPrev = Hmatrix;
-      try (TraceScope span = Trace.startSpan("Hstep")) {
+      Span span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
+      //try (TraceScope span = Trace.startSpan("Hstep")) {
         Hmatrix = nmfStep_Client(WTmatrix, Wmatrix, Amatrix, cutoffThreshold, maxColsPerTopic);
         HTmatrix = Hmatrix.transpose();
 //        if (Trace.isTracing())
 //          DebugUtil.printTable(numiter + ": H is KxM:", connector, Hfinal);
+      //}
+      } finally {
+        span.end();
       }
       if (HARR != null)
         putInDebugArray(HARR, Hmatrix, numiter);
 //      log.debug("Hmatrix: "+Hmatrix);
 
       // WT = ONLYPOS( (H*HT)^-1 * (H*AT) )
-      try (TraceScope span = Trace.startSpan("Wstep")) {
+      span = TraceUtil.startSpan(this.getClass(), "Graphulo");
+      try (Scope scope = span.makeCurrent()) {
+      //try (TraceScope span = Trace.startSpan("Wstep")) {
         WTmatrix = nmfStep_Client(Hmatrix, HTmatrix, ATmatrix, cutoffThreshold, -1);
         Wmatrix = WTmatrix.transpose();
 //        if (Trace.isTracing())
 //          DebugUtil.printTable(numiter + ": W is NxK:", connector, Wfinal);
+      //}
+      } finally {
+        span.end();
       }
 
       hdiff = nmfError_Client(HmatrixPrev, Hmatrix);
@@ -4150,11 +4291,11 @@ public class Graphulo {
     // Write out results!
     if (Wfinal != null) {
       Map<Key, Value> Wmap = MemMatrixUtil.matrixToMapWithLabels(Wmatrix, rowMap, false, 0.0001); // false = label row
-      GraphuloUtil.writeEntries(connector, transposeW ? GraphuloUtil.transposeMap(Wmap) : Wmap, Wfinal, true);
+      GraphuloUtil.writeEntries(client, transposeW ? GraphuloUtil.transposeMap(Wmap) : Wmap, Wfinal, true); //GraphuloUtil.writeEntries(connector, transposeW ? GraphuloUtil.transposeMap(Wmap) : Wmap, Wfinal, true);
     }
     if (Hfinal != null) {
       Map<Key, Value> Hmap = MemMatrixUtil.matrixToMapWithLabels(Hmatrix, colMap, true, 0.0001); // true = label column qualifier
-      GraphuloUtil.writeEntries(connector, transposeH ? GraphuloUtil.transposeMap(Hmap) : Hmap, Hfinal, true);
+      GraphuloUtil.writeEntries(client, transposeH ? GraphuloUtil.transposeMap(Hmap) : Hmap, Hfinal, true);  //GraphuloUtil.writeEntries(connector, transposeH ? GraphuloUtil.transposeMap(Hmap) : Hmap, Hfinal, true);
     }
     return hdiff;
   }
@@ -4324,9 +4465,13 @@ public class Graphulo {
 
     // Inverse
     try {
-      connector.tableOperations().compact(Ttmp1, null, null,
-          Collections.singletonList(InverseMatrixIterator.iteratorSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority() + 1, K, 100)),
-          true, true); // blocks
+      client.tableOperations().compact(Ttmp1, null, null,
+      Collections.singletonList(InverseMatrixIterator.iteratorSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority() + 1, K, 100)),
+      true, true); // blocks
+
+      //connector.tableOperations().compact(Ttmp1, null, null,
+      //    Collections.singletonList(InverseMatrixIterator.iteratorSetting(PLUS_ITERATOR_BIGDECIMAL.getPriority() + 1, K, 100)),
+      //    true, true); // blocks
     } catch (AccumuloSecurityException | AccumuloException e) {
       log.error("problem while compacting "+Ttmp1+" to take the matrix inverse of H*HT", e);
       throw new RuntimeException(e);
@@ -4401,5 +4546,13 @@ public class Graphulo {
 
   }
 
-
+  public String getZooKeepers() {
+    /**
+     *  return the Zookeeper host
+     */
+    String result=""; 
+    Properties prop = getClient().properties();
+    result = prop.getProperty("instance.zookeepers");
+    return result;
+  }
 }

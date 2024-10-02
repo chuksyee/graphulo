@@ -1,6 +1,10 @@
 package edu.mit.ll.graphulo.util;
 
-import org.apache.accumulo.core.client.*;
+//import org.apache.accumulo.core.client.*;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.BatchWriter;
+import org.apache.accumulo.core.client.MultiTableBatchWriter;
 import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
@@ -41,7 +45,7 @@ public class D4MTableWriter implements AutoCloseable {
   /** Holds configuration options to pass to constructor of D4MTableWriter. */
   public static class D4MTableConfig {
     public String baseName;
-    public Connector connector;
+    public AccumuloClient connector;
     public boolean
         useTable = false,
         useTableT = false,
@@ -110,7 +114,7 @@ public class D4MTableWriter implements AutoCloseable {
   private static final String ITER_SUMALL_NAME = "sumAll";
 
   /** Put a SummingIterator on all columns. */
-  public static void assignDegreeAccumulator(String tableName, Connector c) {
+  public static void assignDegreeAccumulator(String tableName, AccumuloClient c) {
     IteratorSetting cfg = null;
     try {
       cfg = c.tableOperations().getIteratorSetting(tableName, ITER_SUMALL_NAME, IteratorUtil.IteratorScope.scan);
@@ -140,7 +144,7 @@ public class D4MTableWriter implements AutoCloseable {
   }
 
   /** Create a table if not already existing. Return whether table created. */
-  public static boolean createTableSoft(String tableName, Connector c, boolean deleteExistingTable) {
+  public static boolean createTableSoft(String tableName, AccumuloClient c, boolean deleteExistingTable) {
     TableOperations to = c.tableOperations();
     try {
       if (to.exists(tableName)) {

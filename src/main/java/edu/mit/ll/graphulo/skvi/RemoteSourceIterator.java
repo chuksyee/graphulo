@@ -12,7 +12,7 @@ import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.Accumulo;
 
 //import org.apache.accumulo.core.client.ClientConfiguration;
-//import org.apache.accumulo.core.client.ClientSideIteratorScanner;
+import org.apache.accumulo.core.client.ClientSideIteratorScanner;
 //import org.apache.accumulo.core.client.Connector;
 //import org.apache.accumulo.core.client.Instance;
 

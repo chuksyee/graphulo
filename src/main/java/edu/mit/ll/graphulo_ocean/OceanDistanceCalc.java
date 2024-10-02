@@ -9,7 +9,9 @@ import edu.mit.ll.graphulo.skvi.DoubleSummingCombiner;
 import edu.mit.ll.graphulo.skvi.LruCacheIterator;
 import edu.mit.ll.graphulo.skvi.TwoTableIterator;
 import edu.mit.ll.graphulo.util.GraphuloUtil;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.iterators.Combiner;
@@ -79,7 +81,7 @@ public class OceanDistanceCalc {
     log.info(OceanDistanceCalc.class.getName() + " " + opts);
 
     AuthenticationToken auth = getTXE1Authentication(opts.txe1);
-    Connector conn = setupTXE1Connector(opts.txe1, auth);
+    AccumuloClient conn = setupTXE1Connector(opts.txe1, auth);
     Graphulo graphulo = new Graphulo(conn, auth);
     executeGraphulo(graphulo, opts);
   }

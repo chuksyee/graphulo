@@ -1,6 +1,9 @@
 package edu.mit.ll.graphulo.util;
 
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
@@ -24,12 +27,12 @@ public class DebugUtil {
   private DebugUtil() {
   }
 
-  public static void printTable(String header, Connector conn, String table) {
+  public static void printTable(String header, AccumuloClient conn, String table) {
     printTable(header, conn, table, null);
   }
 
   /** @param w Label Width of rows and columns; default 5 */
-  public static void printTable(String header, Connector conn, String table, Integer w) {
+  public static void printTable(String header, AccumuloClient conn, String table, Integer w) {
     if (header != null)
       System.out.println(header);
     Scanner scan;

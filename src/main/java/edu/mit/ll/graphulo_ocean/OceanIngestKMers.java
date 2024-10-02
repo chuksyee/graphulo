@@ -89,7 +89,7 @@ public class OceanIngestKMers {
     opts.parseArgs(OceanIngestKMers.class.getName(), args);
     log.info(OceanIngestKMers.class.getName() + " " + opts);
 
-    Connector conn = setupTXE1Connector(opts.txe1);
+    AccumuloClient conn = setupTXE1Connector(opts.txe1);
 
     return ingestFileList(conn, opts);
   }
@@ -105,7 +105,7 @@ public class OceanIngestKMers {
     //Instance instance = new ZooKeeperInstance(cc);
     try {
       //return instance.getConnector("AccumuloUser", auth);
-      return Accumulo.newClient().from(auth.getProperties()).build();
+      return Accumulo.newClient().to(instanceName,zookeeperHost).as(auth.getPrincipal(),auth).build();
     } catch (AccumuloException | AccumuloSecurityException e) {
       throw new RuntimeException("Trouble authenticating to database "+txe1,e);
     }
@@ -128,7 +128,7 @@ public class OceanIngestKMers {
   }
 
   /** @return Number of files processed */
-  private int ingestFileList(Connector conn, Opts opts) {
+  private int ingestFileList(AccumuloClient conn, Opts opts) {
     try (BufferedReader fo = new BufferedReader(new FileReader(opts.listOfSamplesFile))) {
       for (int i = 0; i < opts.startOffset; i++)
         fo.readLine();
