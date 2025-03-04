@@ -7,7 +7,8 @@ import edu.mit.ll.graphulo.examples.ExampleUtil;
 import edu.mit.ll.graphulo.util.AccumuloTestBase;
 import edu.mit.ll.graphulo.util.GraphuloUtil;
 import edu.mit.ll.graphulo.util.TestUtil;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Value;
@@ -44,7 +45,7 @@ public class OceanTest extends AccumuloTestBase {
   }
 
   private void ingestFiles(String tSampleIDSeqID) throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     GraphuloUtil.deleteTables(conn, tSampleIDSeqID);
 //    Map<Key,Value> expect = new TreeMap<>(TestUtil.COMPARE_KEY_TO_COLQ),
 //        actual = new TreeMap<>(TestUtil.COMPARE_KEY_TO_COLQ);
@@ -62,7 +63,7 @@ public class OceanTest extends AccumuloTestBase {
 
 
   private void sumToSample(String tSampleIDSeqID, String tSampleID) {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     GraphuloUtil.deleteTables(conn, tSampleID);
     DynamicIteratorSetting dis = new DynamicIteratorSetting(1, null)
         .append(ValToColApply.iteratorSetting(1))
@@ -75,7 +76,7 @@ public class OceanTest extends AccumuloTestBase {
   }
 
   private void doBrayCurtis(String tSampleID, String tSampleDistance) {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     GraphuloUtil.deleteTables(conn, tSampleDistance);
     Graphulo g = new Graphulo(conn, tester.getPassword());
     long numSamplePairings = g.cartesianProductBrayCurtis(tSampleID, tSampleDistance,
@@ -85,7 +86,7 @@ public class OceanTest extends AccumuloTestBase {
 
   @Test
   public void ingestKmersAndDist() throws Exception {
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
     final String tKmer = "oceantest_Tkmer";
     final String tKmerDeg = "oceantest_TkmerDeg";
     String tDist = "oceantest_TsampleDist";
@@ -124,7 +125,7 @@ public class OceanTest extends AccumuloTestBase {
     CSVIngesterKmer<T> create(int kmer);
   }
 
-  private void ingestKmers(Connector conn, String tKmer, String tKmerDeg, Creator<?> creator) throws Exception {
+  private void ingestKmers(AccumuloClient conn, String tKmer, String tKmerDeg, Creator<?> creator) throws Exception {
 //    Map<Key,Value> expect = new TreeMap<>(TestUtil.COMPARE_KEY_TO_COLQ),
 //        actual = new TreeMap<>(TestUtil.COMPARE_KEY_TO_COLQ);
 
@@ -135,7 +136,7 @@ public class OceanTest extends AccumuloTestBase {
   }
 
 
-  private void doDist(Connector conn, String tKmer, String tKmerDeg, String tDist) throws Exception {
+  private void doDist(AccumuloClient conn, String tKmer, String tKmerDeg, String tDist) throws Exception {
     OceanDistanceCalc odc = new OceanDistanceCalc();
     OceanDistanceCalc.Opts opts = new OceanDistanceCalc.Opts();
     opts.oTsampleDist = tDist;

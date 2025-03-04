@@ -3,13 +3,16 @@ package edu.mit.ll.d4m.db.cloud.test;
 import edu.mit.ll.cloud.connection.ConnectionProperties;
 import edu.mit.ll.d4m.db.cloud.D4mDbTableOperations;
 import edu.mit.ll.d4m.db.cloud.accumulo.AccumuloTableOperations;
+import org.apache.accumulo.core.client.admin.InstanceOperations;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
+//import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
@@ -33,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.Properties;
+
 
 /**
  * Temporary class for testing code.
@@ -44,12 +49,35 @@ public class SomeTest {
     private String password = "secret";
     private String tableName = "test1";
 
-    private static ClientConfiguration txe1config;
+    private static String TXE1_CLOUDDB_FILE="clouddb51_pass.txt";
+    //private static ClientConfiguration txe1config;
+    private static ConnectionProperties txe1config;
+    private static AccumuloClient client=null;
+
     static {
         String instance = "classdb51";
         String host = "classdb51.cloud.llgrid.txe1.mit.edu:2181";
+        String user = "AccumuloUser";
+        String pzwd = "";
         int timeout = 10000;
-        txe1config = ClientConfiguration.loadDefault().withInstance(instance).withZkHosts(host).withZkTimeout(timeout);
+        
+        txe1config.setInstanceName(instance);
+        txe1config.setHost(host);
+        txe1config.setSessionTimeOut(timeout);
+        txe1config.setUser(user);
+        
+        /*
+       props.put("instance.name", this.instanceName);
+        props.put("instance.zookeepers", this.zookeeperHost);
+        props.put("auth.type", "password")
+        props.put("auth.principal", this.username);
+        props.put("auth.token", new String(this.auth.getPassword(),StandardCharsets.UTF_8));
+
+         * Accumulo.newClient().to(this.conn.getInstanceName(), this.conn.getHost())
+        .as(this.conn.getUser(), this.conn.getPass()).build();
+         */
+       // client = Accumulo.newClient().to(instance, host).as(user, pzwd).build();
+        //txe1config = ClientConfiguration.loadDefault().withInstance(instance).withZkHosts(host).withZkTimeout(timeout);
     }
 
     private void printList(Collection<?> list, String prefix) {
@@ -62,7 +90,7 @@ public class SomeTest {
 
     static String[] getTXE1UserPass() throws IOException {
         String user = "AccumuloUser";
-        BufferedReader f = new BufferedReader(new FileReader("clouddb51_pass.txt"));
+        BufferedReader f = new BufferedReader(new FileReader(TXE1_CLOUDDB_FILE));
         String pass = f.readLine();
         f.close();
         return new String[] { user, pass};
@@ -71,16 +99,18 @@ public class SomeTest {
     @Ignore
     @Test
     public void testTXE1() throws Exception {
-        Assume.assumeTrue("Test requires TXE1", new File("clouddb51_pass.txt").exists());
+        Assume.assumeTrue("Test requires TXE1", new File(TXE1_CLOUDDB_FILE).exists());
 
-        Instance instance = new ZooKeeperInstance(txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_NAME), txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST));
+        //Instance instance = new ZooKeeperInstance(txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_NAME), txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST));
         String[] tmp = getTXE1UserPass();
         String user = tmp[0];
         String pass = tmp[1];
-        Connector conn = instance.getConnector(user, new PasswordToken(pass));
-        ConnectionProperties connprops = new ConnectionProperties(txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST),user,pass,txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_NAME),null);
+        txe1config.setUser(user);
+        txe1config.setPass(pass);
+        client = Accumulo.newClient().from(txe1config.getProperties()).build();
+        //ConnectionProperties connprops = new ConnectionProperties(txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST),user,pass,txe1config.get(ClientConfiguration.ClientProperty.INSTANCE_NAME),null);
 
-        innerTest(instance,conn,connprops);
+        innerTest(client, txe1config);
     }
 
     @Ignore
@@ -89,32 +119,33 @@ public class SomeTest {
         String instanceName = "Dev";
         String host = "localhost:2181";
         int timeout = 10000;
-        ClientConfiguration local = ClientConfiguration.loadDefault().withInstance(instanceName).withZkHosts(host).withZkTimeout(timeout);
-        Instance instance = new ZooKeeperInstance(local.get(ClientConfiguration.ClientProperty.INSTANCE_NAME), local.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST));
+        //ClientConfiguration local = ClientConfiguration.loadDefault().withInstance(instanceName).withZkHosts(host).withZkTimeout(timeout);
+        //Instance instance = new ZooKeeperInstance(local.get(ClientConfiguration.ClientProperty.INSTANCE_NAME), local.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST));
         String user = "root";
-        Connector conn = instance.getConnector(user, new PasswordToken("secret"));
-        ConnectionProperties connprops = new ConnectionProperties(local.get(ClientConfiguration.ClientProperty.INSTANCE_ZK_HOST),user,"secret",local.get(ClientConfiguration.ClientProperty.INSTANCE_NAME),null);
-
-        innerTest(instance,conn,connprops);
+        //Connector conn = instance.getConnector(user, new PasswordToken("secret"));
+       
+        ConnectionProperties connprops = new ConnectionProperties(host,user,"secret",instanceName,null);
+        AccumuloClient conn = Accumulo.newClient().from(connprops.getProperties()).build();
+        innerTest(conn,connprops);
     }
 
     @Ignore
     @Test
     public void testNormal() throws Exception {
-        Instance instance = new ZooKeeperInstance(instanceName,zookeeperHost);
-        Connector conn = instance.getConnector(username, new PasswordToken(password));
+        //Instance instance = new ZooKeeperInstance(instanceName,zookeeperHost);
+        //Connector conn = instance.getConnector(username, new PasswordToken(password));
         ConnectionProperties connprops = new ConnectionProperties(zookeeperHost,username,password,instanceName,null);
-
-        innerTest(instance,conn,connprops);
+        AccumuloClient conn = Accumulo.newClient().from(connprops.getProperties()).build();
+        innerTest(conn,connprops);
     }
 
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    static {
-        org.apache.accumulo.core.client.ClientConfiguration.loadDefault();
-    }
+    //static {
+    //    org.apache.accumulo.core.client.ClientConfiguration.loadDefault();
+    //}
 
     @Test
     public void mini() throws Exception {
@@ -122,21 +153,23 @@ public class SomeTest {
         File tempDir = tempFolder.newFolder();
         MiniAccumuloCluster accumulo = new MiniAccumuloCluster(tempDir, "password");
         accumulo.start(); // doesn't work on Dylan's computer for some reason.  The OS closes the Zookeeper connection.
-        Instance instance = new ZooKeeperInstance(accumulo.getInstanceName(), accumulo.getZooKeepers());
-        Connector conn = instance.getConnector("root", new PasswordToken("password"));
+
+        //Instance instance = new ZooKeeperInstance(accumulo.getInstanceName(), accumulo.getZooKeepers());
+        //Connector conn = instance.getConnector("root", new PasswordToken("password"));
+        AccumuloClient conn = Accumulo.newClient().to(accumulo.getInstanceName(),accumulo.getZooKeepers()).as("root","password").build();
         ConnectionProperties connprops = new ConnectionProperties(accumulo.getZooKeepers(),"root","password",accumulo.getInstanceName(),null);
 
-        innerTest(instance,conn,connprops);
+        innerTest(conn,connprops);
 
         accumulo.stop();
         tempDir.delete();
     }
 
-    private void innerTest(Instance instance, Connector conn, ConnectionProperties connprops) throws Exception {
+    private void innerTest(AccumuloClient conn, ConnectionProperties connprops) throws Exception {
         D4mDbTableOperations dbtop = new D4mDbTableOperations(connprops);
-
+        InstanceOperations instance= conn.instanceOperations(); 
         printList(conn.tableOperations().list(), "tables");
-        printList(instance.getMasterLocations(), "master_locations");
+        printList(instance.getManagerLocations(), "master_locations");
 
 	// create tableName
         if (!conn.tableOperations().exists(tableName))

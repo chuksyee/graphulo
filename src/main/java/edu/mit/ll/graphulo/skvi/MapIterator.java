@@ -43,7 +43,7 @@ public class MapIterator implements SortedKeyValueIterator<Key, Value> {
   public SortedKeyValueIterator<Key, Value> deepCopy(IteratorEnvironment env) {
     MapIterator newInstance;
     try {
-      newInstance = MapIterator.class.newInstance();
+      newInstance = MapIterator.class.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

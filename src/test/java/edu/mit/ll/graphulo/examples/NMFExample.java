@@ -7,13 +7,15 @@ import edu.mit.ll.graphulo.util.GraphuloUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.core.trace.DistributedTrace;
+//import org.apache.accumulo.core.trace.DistributedTrace;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -62,7 +64,7 @@ public class NMFExample extends AccumuloTestBase {
 //    Connector c = instance.getConnector("root", new PasswordToken("secret"));
     // Here, we connect to the Accumulo instance given by TEST_CONFIG.java.
     // You can change this by passing the option -DTEST_CONFIG=local or -DTEST_CONFIG=txe1 or similar.
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // Delete result table if it exists, so that we don't sum in previous runs with our results.
     GraphuloUtil.deleteTables(conn, Htable, HTtable, Wtable, WTtable);
@@ -104,7 +106,7 @@ public class NMFExample extends AccumuloTestBase {
         MathTwoScalar.combinerSetting(Graphulo.PLUS_ITERATOR_BIGDECIMAL.getPriority(), null, MathTwoScalar.ScalarOp.PLUS, MathTwoScalar.ScalarType.DOUBLE, false),
         null, null, null, false, false, -1);
 
-    DistributedTrace.disable();
+    //DistributedTrace.disable();
 
     // Now Scanning APtable
     BatchScanner bs = conn.createBatchScanner(APtable, Authorizations.EMPTY, 2);

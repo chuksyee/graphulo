@@ -5,7 +5,9 @@ import edu.mit.ll.graphulo.skvi.InjectIterator;
 import edu.mit.ll.graphulo.util.AccumuloTestBase;
 import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.data.Key;
@@ -14,7 +16,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.DebugIterator;
 import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.hadoop.io.Text;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -41,7 +43,7 @@ public class InjectTest extends AccumuloTestBase {
    */
   @Test
   public void testInsertScan() throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // create table, add table split, write data
     final String tableName = getUniqueNames(1)[0];
@@ -84,7 +86,7 @@ public class InjectTest extends AccumuloTestBase {
   @Test
 //  @Ignore("KnownBug: ACCUMULO-3646")
   public void testInjectOnScan_Empty() throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // create table, add table split, write data
     final String tableName = getUniqueNames(1)[0];
@@ -127,7 +129,7 @@ public class InjectTest extends AccumuloTestBase {
    */
   @Test
   public void testInjectOnScan_Empty_Reg() throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // create table, add table split, write data
     final String tableName = getUniqueNames(1)[0];
@@ -169,7 +171,7 @@ public class InjectTest extends AccumuloTestBase {
   @Test
 //  @Ignore("KnownBug: ACCUMULO-3646")
   public void testInjectOnScan() throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // create table, add table split, write data
     final String tableName = getUniqueNames(1)[0];
@@ -217,7 +219,7 @@ public class InjectTest extends AccumuloTestBase {
    */
   @Test
   public void testInjectOnCompact() throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // create table, add table split, write data
     final String tableName = getUniqueNames(1)[0];
@@ -285,7 +287,7 @@ public class InjectTest extends AccumuloTestBase {
   @Test
   @Ignore("KnownBug: ACCUMULO-3645 Fixed in Accumulo 1.7.0")
   public void testInjectOnCompact_Empty() throws Exception {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // create table, add table split, write data
     final String tableName = getUniqueNames(1)[0];

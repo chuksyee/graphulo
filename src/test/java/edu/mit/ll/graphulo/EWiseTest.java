@@ -6,7 +6,9 @@ import edu.mit.ll.graphulo.util.GraphuloUtil;
 import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -42,7 +44,7 @@ public class EWiseTest extends AccumuloTestBase {
    */
   @Test
   public void testEWiseX() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -103,7 +105,7 @@ public class EWiseTest extends AccumuloTestBase {
 
   @Test
   public void testEWiseX_SCC() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tA, tB;
     {
@@ -187,7 +189,7 @@ public class EWiseTest extends AccumuloTestBase {
    */
   @Test
   public void testEWiseSum() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tA, tB, tCT;
     {

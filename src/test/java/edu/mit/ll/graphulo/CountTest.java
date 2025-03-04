@@ -9,7 +9,10 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.clientImpl.ClientContext;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -43,7 +46,7 @@ public class CountTest extends AccumuloTestBase {
 
   @Test
   public void testRowCountingIterator() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA;
     {
       String[] names = getUniqueNames(1);
@@ -79,7 +82,7 @@ public class CountTest extends AccumuloTestBase {
 
   @Test
   public void testCountRows() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA;
     {
       String[] names = getUniqueNames(1);
@@ -109,7 +112,7 @@ public class CountTest extends AccumuloTestBase {
 
   @Test
   public void testCountAllIterator() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA;
     {
       String[] names = getUniqueNames(1);
@@ -146,7 +149,7 @@ public class CountTest extends AccumuloTestBase {
 
   @Test
   public void testDynamicIteratorOk() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
     final String tA, tB;
     {
       String[] names = getUniqueNames(2);
@@ -172,8 +175,8 @@ public class CountTest extends AccumuloTestBase {
     scanner.setRanges(Collections.singleton(new Range()));
 
     Map<String, String> opt = new HashMap<>();
-    String instance = conn.getInstance().getInstanceName();
-    String zookeepers = conn.getInstance().getZooKeepers();
+    String instance = conn.getInstanceName();
+    String zookeepers = conn.getZooKeepers();
     String user = conn.whoami();
     opt.put(RemoteSourceIterator.ZOOKEEPERHOST, zookeepers);
     opt.put(RemoteSourceIterator.INSTANCENAME, instance);

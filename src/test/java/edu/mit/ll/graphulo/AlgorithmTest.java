@@ -8,7 +8,9 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.lexicoder.IntegerLexicoder;
@@ -16,7 +18,7 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.core.trace.DistributedTrace;
+//import org.apache.accumulo.core.trace.DistributedTrace;
 import org.apache.hadoop.io.Text;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -71,7 +73,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
 
   private void testkTrussAdj_Inner(KTrussAdjAlg alg) throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
     final String tA, tR;
     {
       String[] names = getUniqueNames(2);
@@ -234,7 +236,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
   @Test
   public void testTriCount()  throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
     final String tA = getUniqueNames(1)[0];
 
     {
@@ -270,7 +272,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
   @Test
   public void testTriCountAdjEdge()  throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
     final String tA, tE;
     {
       final String[] names = getUniqueNames(2);
@@ -376,7 +378,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
   @Test
   public void testTriCountMagic2()  throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
     final String tA = getUniqueNames(1)[0];
 
     {
@@ -412,7 +414,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
   @Test
   public void testkTrussEdge() throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tET, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -526,7 +528,7 @@ public class AlgorithmTest extends AccumuloTestBase {
   }
 
   public void testJaccard_Inner(JaccardAlg jalg) throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tADeg, tR;
     {
       String[] names = getUniqueNames(3);
@@ -618,7 +620,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
   @Test
   public void testNMF() throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tET, tW, tWT, tH, tHT, tWH, tR;
     {
       String[] names = getUniqueNames(8);
@@ -660,10 +662,11 @@ public class AlgorithmTest extends AccumuloTestBase {
     long t = System.currentTimeMillis();
     int K = 3;
     double error = graphulo.NMF(tE, tET, tW, tWT, tH, tHT, K, maxIter, true, 0, 2);
-    System.out.println("Trace is "+ org.apache.htrace.Trace.isTracing()+"; NMF time "+(System.currentTimeMillis()-t));
+    //System.out.println("Trace is "+ org.apache.htrace.Trace.isTracing()+"; NMF time "+(System.currentTimeMillis()-t));
+    System.out.println(" NMF time "+(System.currentTimeMillis()-t));
     log.info("NMF error " + error);
 
-    DistributedTrace.disable();
+    //DistributedTrace.disable();
 
     System.out.println("A:");
     Scanner scanner = conn.createScanner(tE, Authorizations.EMPTY);
@@ -721,7 +724,7 @@ public class AlgorithmTest extends AccumuloTestBase {
 
   @Test
   public void testNMF_Client() throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tET, tW, tWT, tH, tHT, tWH;
     {
       String[] names = getUniqueNames(7);
@@ -822,7 +825,7 @@ public class AlgorithmTest extends AccumuloTestBase {
    */
   @Test
   public void testTfidf() throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tEDeg, tET, tR, tRT;
     {
       String[] names = getUniqueNames(4);

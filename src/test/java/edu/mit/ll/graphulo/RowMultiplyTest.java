@@ -7,7 +7,9 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.clientImpl.ClientContext;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -47,7 +49,8 @@ public class RowMultiplyTest extends AccumuloTestBase {
    */
   @Test
   public void testSelectorRowMultiply() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
+    
     final String tA, tADeg;
     {
       String[] names = getUniqueNames(2);
@@ -85,8 +88,8 @@ public class RowMultiplyTest extends AccumuloTestBase {
     }
 
     Map<String, String> opt = new HashMap<>();
-    String instance = conn.getInstance().getInstanceName();
-    String zookeepers = conn.getInstance().getZooKeepers();
+    String instance = conn.getInstanceName();
+    String zookeepers = conn.getZooKeepers();
     String user = conn.whoami();
     opt.put("AT.zookeeperHost", zookeepers);
     opt.put("AT.instanceName", instance);

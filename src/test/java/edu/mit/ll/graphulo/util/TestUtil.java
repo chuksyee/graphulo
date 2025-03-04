@@ -5,7 +5,9 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -39,7 +41,7 @@ public class TestUtil {
   }
 
 
-  public static void createTestTable(Connector conn, String tableName) {
+  public static void createTestTable( AccumuloClient conn, String tableName) {
     if (conn.tableOperations().exists(tableName)) {
       try {
         conn.tableOperations().delete(tableName);
@@ -58,7 +60,7 @@ public class TestUtil {
     }
   }
 
-  public static void createTestTable(Connector conn, String tableName, SortedSet<Text> splits) {
+  public static void createTestTable(AccumuloClient conn, String tableName, SortedSet<Text> splits) {
     createTestTable(conn, tableName);
 
     if (splits != null && !splits.isEmpty())
@@ -75,7 +77,7 @@ public class TestUtil {
    * Delete table if it exists and make it afresh.
    * Optionally insert entries into the new table.
    */
-  public static void createTestTable(Connector conn, String tableName, SortedSet<Text> splits, Map<Key, Value> entriesToIngest) {
+  public static void createTestTable(AccumuloClient conn, String tableName, SortedSet<Text> splits, Map<Key, Value> entriesToIngest) {
     createTestTable(conn, tableName, splits);
 
     if (entriesToIngest != null && !entriesToIngest.isEmpty()) {
@@ -215,7 +217,7 @@ public class TestUtil {
     }
   }
 
-  public static void scanTableToMap(Connector conn, String table, Map<Key,Value> map) throws TableNotFoundException {
+  public static void scanTableToMap(AccumuloClient conn, String table, Map<Key,Value> map) throws TableNotFoundException {
     BatchScanner scanner = conn.createBatchScanner(table, Authorizations.EMPTY, 2);
     try {
       scanner.setRanges(Collections.singleton(new Range()));

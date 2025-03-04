@@ -121,7 +121,7 @@ public class OceanDistanceCalc {
     IteratorSetting isDistFinish = MathTwoScalar.applyOpDouble(Graphulo.DEFAULT_COMBINER_PRIORITY+1,
         false, MathTwoScalar.ScalarOp.MINUS, 1, true); // keep zero
     GraphuloUtil.addOnScopeOption(isDistFinish, EnumSet.of(IteratorUtil.IteratorScope.scan));
-    GraphuloUtil.applyIteratorSoft(isDistFinish, graphulo.getConnector().tableOperations(), opts.oTsampleDist);
+    GraphuloUtil.applyIteratorSoft(isDistFinish, graphulo.getClient().tableOperations(), opts.oTsampleDist);
   }
 
 }

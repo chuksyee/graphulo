@@ -6,7 +6,9 @@ import edu.mit.ll.graphulo.util.AccumuloTestBase;
 import edu.mit.ll.graphulo.util.GraphuloUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.TableNotFoundException;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -40,7 +42,7 @@ public class TriangleCountExample extends AccumuloTestBase {
 //    Connector c = instance.getConnector("root", new PasswordToken("secret"));
     // Here, we connect to the Accumulo instance given by TEST_CONFIG.java.
     // You can change this by passing the option -DTEST_CONFIG=local or -DTEST_CONFIG=txe1 or similar.
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
 
     // Delete result table if it exists, so that we don't sum in previous runs with our results.
     GraphuloUtil.deleteTables(conn, Etable,
@@ -81,7 +83,7 @@ public class TriangleCountExample extends AccumuloTestBase {
     final String Etable = "ex" + SCALE + "AEdge2";                 // Incidence table A.
     final String AtableLower = "ex" + SCALE + "AAdjUULower2";       // Adjacency table A (lower triangle).
     final String AtableUpper = "ex" + SCALE + "AAdjUUUpper2";       // Adjacency table A (upper triangle).
-    final Connector conn = tester.getConnector();
+    final AccumuloClient conn = tester.getConnector();
     GraphuloUtil.deleteTables(conn, Etable,
         AtableLower, AtableLower + Graphulo.TRICOUNT_TEMP_TABLE_SUFFIX,
         AtableUpper, AtableUpper + Graphulo.TRICOUNT_TEMP_TABLE_SUFFIX);

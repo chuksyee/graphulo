@@ -1,7 +1,8 @@
 package edu.mit.ll.graphulo.examples;
 
 import edu.mit.ll.graphulo.util.TripleFileWriter;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class ExampleUtil {
   }
 
   /** Reads files from src/test/resource/data and inserts into Accumulo using D4M Schema table+transpose+degree. */
-  public static void ingestAdjacencySCALE(int SCALE, char version, String baseName, Connector conn) throws FileNotFoundException {
+  public static void ingestAdjacencySCALE(int SCALE, char version, String baseName, AccumuloClient conn) throws FileNotFoundException {
     TripleFileWriter tripleFileWriter = new TripleFileWriter(conn);
     File rowFile = getDataFile(String.valueOf(SCALE)+version+"r.txt");
     File colFile = getDataFile(String.valueOf(SCALE)+version+"c.txt");
@@ -40,7 +41,7 @@ public class ExampleUtil {
     log.info("Wrote "+cnt+" edges to D4M Adjacency tables with base name "+baseName);
   }
 
-  public static void ingestIncidenceSCALE(int SCALE, char version, String baseName, Connector conn) {
+  public static void ingestIncidenceSCALE(int SCALE, char version, String baseName, AccumuloClient conn) {
 //    D4mDbTableOperations d4mtops = new D4mDbTableOperations(conn.getInstance().getInstanceName(), conn.getInstance().getZooKeepers(),
 //        conn.whoami(), pass );
     TripleFileWriter tripleFileWriter = new TripleFileWriter(conn);
@@ -53,7 +54,7 @@ public class ExampleUtil {
     log.info("Wrote "+cnt+" edges to D4M Incidence tables with base name "+baseName);
   }
 
-  public static void ingestIncidenceFromAdjacencySCALE(int SCALE, char version, String baseName, Connector conn) {
+  public static void ingestIncidenceFromAdjacencySCALE(int SCALE, char version, String baseName, AccumuloClient conn) {
 //    D4mDbTableOperations d4mtops = new D4mDbTableOperations(conn.getInstance().getInstanceName(), conn.getInstance().getZooKeepers(),
 //        conn.whoami(), pass );
     TripleFileWriter tripleFileWriter = new TripleFileWriter(conn);
@@ -65,7 +66,7 @@ public class ExampleUtil {
   }
 
   /** Reads files from src/test/resource/data and inserts into Accumulo single-table schema. */
-  public static void ingestSingleSCALE(int SCALE, char version, String baseName, Connector conn) throws FileNotFoundException {
+  public static void ingestSingleSCALE(int SCALE, char version, String baseName, AccumuloClient conn) throws FileNotFoundException {
     TripleFileWriter tripleFileWriter = new TripleFileWriter(conn);
     File rowFile = getDataFile(String.valueOf(SCALE)+version+"r.txt");
     File colFile = getDataFile(String.valueOf(SCALE)+version+"c.txt");

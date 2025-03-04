@@ -365,14 +365,18 @@ public class RemoteWriteIterator implements OptionDescriber, SortedKeyValueItera
     if (tableName == null && tableNameTranspose == null)
       return;
 
-    ClientConfiguration cc = ClientConfiguration.loadDefault().withInstance(instanceName).withZkHosts(zookeeperHost);
-    if (timeout != -1)
-      cc = cc.withZkTimeout(timeout);
-    Instance instance = new ZooKeeperInstance(cc);
-    Connector connector;
+    
+    //ClientConfiguration cc = ClientConfiguration.loadDefault().withInstance(instanceName).withZkHosts(zookeeperHost);
+    //if (timeout != -1)
+    //  cc = cc.withZkTimeout(timeout);
+    //Instance instance = new ZooKeeperInstance(cc);
+    //Connector connector;
+    AccumuloClient connector=null;
+
     try {
-      connector = instance.getConnector(username, auth);
-    } catch (AccumuloException | AccumuloSecurityException e) {
+      connector = Accumulo.newClient().to(instanceName,zookeeperHost).as(username,auth).build();
+      //connector = instance.getConnector(username, auth);
+    } catch (Exception e) {
       log.error("failed to connect to Accumulo instance " + instanceName, e);
       throw new RuntimeException(e);
     }

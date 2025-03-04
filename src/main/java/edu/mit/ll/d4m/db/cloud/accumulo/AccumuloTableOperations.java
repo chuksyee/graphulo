@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.accumulo.core.clientImpl.ClientContext;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.IteratorSetting;
@@ -26,6 +27,7 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.dataImpl.KeyExtent;
 import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.data.TableId;
 import org.apache.accumulo.core.iterators.Combiner;
 import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
@@ -155,7 +157,7 @@ public class AccumuloTableOperations {
 		} catch(D4mException e) {
 			log.warn("",e);
 		} finally {
-			ThriftUtil.returnClient(client);
+			ThriftUtil.returnClient(client, (ClientContext)this.connection.getAccumuloClient());
 		}
 		return list;
 	}
@@ -184,23 +186,24 @@ public class AccumuloTableOperations {
 		try {
 			masterClient = this.connection.getMasterClient();
 			tabClient = this.connection.getTabletClient(tserverName);
-			Map<String, String> nameToIdMap = this.connection.getNameToIdMap();
+			Map<String, TableId> nameToIdMap = this.connection.getNameToIdMap();
 
 			for(String tableName : tableNames) {
 
-				String tableId = nameToIdMap.get(tableName);
-				log.debug(tserverName+"-Tablet INFO ("+tableName+","+tableId+")");
+				//String tableId = nameToIdMap.get(tableName);
+				TableId tableId = nameToIdMap.get(tableName);
+				log.debug(tserverName+"-Tablet INFO ("+tableName+","+tableId.canonical()+")");
 				TInfo tinfo = new TInfo();
 
-				tabStatsList.addAll(tabClient.getTabletStats(tinfo, this.connection.getCredentials() , tableId));
+				tabStatsList.addAll(tabClient.getTabletStats(tinfo, this.connection.getCredentials() , tableId.canonical()));
 				//		tabStatsList.addAll(tabClient.getTabletStats(null, authInfo, tableId));
 			}
 
 		} catch (TException e) {
 			log.warn("",e);
 		} finally {
-			ThriftUtil.returnClient((ManagerClientService.Client)masterClient);
-			ThriftUtil.returnClient((TabletServerClientService.Client)tabClient);
+			ThriftUtil.returnClient((ManagerClientService.Client)masterClient, (ClientContext)this.connection.getAccumuloClient());
+			ThriftUtil.returnClient((TabletServerClientService.Client)tabClient, (ClientContext)this.connection.getAccumuloClient());
 		}
 
 
@@ -524,8 +527,10 @@ public class AccumuloTableOperations {
 			throw new D4mException("Table not found - "+METADATA_TABLE_NAME,e);
 		}
 		METADATA_PREV_ROW_COLUMN.fetch(scanner);
-		final String internalTableName = ac.getNameToIdMap().get(tableName);
-		final Text start = new Text(ac.getNameToIdMap().get(tableName)); // check
+		//Map<String, TableId> tabIdMap = ac.getNameToIdMap();
+		TableId tableid = ac.getNameToIdMap().get(tableName);
+		final String internalTableName = tableid.canonical();
+		final Text start = new Text(internalTableName); // check
 		final Text end = new Text(start);
 		end.append(new byte[] {'<'}, 0, 1);
 		scanner.setRange(new org.apache.accumulo.core.data.Range(start, end));

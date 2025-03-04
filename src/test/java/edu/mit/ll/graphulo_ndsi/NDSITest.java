@@ -6,7 +6,8 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
@@ -36,7 +37,7 @@ public class NDSITest extends AccumuloTestBase {
    */
   @Test
   public void testNDSIQuery() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tR;
     {
       String[] names = getUniqueNames(2);

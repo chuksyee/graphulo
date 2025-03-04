@@ -14,12 +14,16 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.dataImpl.thrift.IterInfo;
 import org.apache.accumulo.core.iterators.IteratorEnvironment;
-import org.apache.accumulo.core.iterators.IteratorUtil;
+//import org.apache.accumulo.core.iterators.IteratorUtil;
+import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
+import org.apache.accumulo.core.iteratorsImpl.IteratorBuilder;
+import org.apache.accumulo.core.iteratorsImpl.IteratorConfigUtil;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,6 +40,52 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientSideIteratorAggregatingScanner extends ScannerOptions implements BatchScanner {
   BatchScanner bs;
+
+  private class CSIterAggregatingIteratorEnvironment implements IteratorEnvironment {
+
+    private SamplerConfiguration samplerConfig;
+    private boolean sampleEnabled;
+    
+    CSIterAggregatingIteratorEnvironment(boolean sampleEnabled, SamplerConfiguration samplerConfig) {
+      this.sampleEnabled = sampleEnabled;
+      this.samplerConfig = samplerConfig;
+    }
+    @Override
+    public IteratorScope getIteratorScope() {
+      return IteratorScope.scan;
+    }
+
+    @Override
+    public boolean isFullMajorCompaction() {
+      return false;
+    }
+
+    @Override
+    public boolean isUserCompaction() {
+      return false;
+    }
+
+    @Override
+    public Authorizations getAuthorizations() {
+      return ClientSideIteratorAggregatingScanner.this.getAuthorizations();
+    }
+
+    @Override
+    public IteratorEnvironment cloneWithSamplingEnabled() {
+      return new CSIterAggregatingIteratorEnvironment(true, samplerConfig);
+    }
+
+    @Override
+    public boolean isSamplingEnabled() {
+      return sampleEnabled;
+    }
+
+    @Override
+    public SamplerConfiguration getSamplerConfiguration() {
+      return samplerConfig;
+    }
+
+  }
 
   public ClientSideIteratorAggregatingScanner(BatchScanner bs) {
     this.bs = bs;
@@ -60,6 +110,25 @@ public class ClientSideIteratorAggregatingScanner extends ScannerOptions impleme
       tm.put(iterInfo.getPriority(), iterInfo);
     }
 
+    /*
+        IteratorEnvironment
+        IteratorBuilder
+
+     *   skvi = IteratorConfigUtil.loadIterators(smi, ib);
+     */
+    try {
+        //IteratorEnvironment
+        IteratorEnvironment iterEnv =new CSIterAggregatingIteratorEnvironment(this.bs.getSamplerConfiguration() != null,this.bs.getSamplerConfiguration() );
+        //IteratorBuilder
+        IteratorBuilder ib =
+          IteratorBuilder.builder(tm.values()).opts(serverSideIteratorOptions).env(iterEnv).build();
+        skvi = IteratorConfigUtil.loadIterators(skvi, ib);
+
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+
+    /**
     try {
       skvi = IteratorUtil.loadIterators(skvi, tm.values(), serverSideIteratorOptions, new IteratorEnvironment() {
         @Override
@@ -109,7 +178,8 @@ public class ClientSideIteratorAggregatingScanner extends ScannerOptions impleme
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-
+  */
+  
     try {
       skvi.seek(new Range(), Collections.<ByteSequence>emptySet(), false);
     } catch (IOException e) {

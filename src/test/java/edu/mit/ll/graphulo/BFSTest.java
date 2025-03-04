@@ -6,7 +6,9 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -17,7 +19,7 @@ import org.apache.accumulo.core.iterators.Combiner;
 import org.apache.accumulo.core.iterators.LongCombiner;
 import org.apache.accumulo.core.iterators.user.SummingCombiner;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.hadoop.io.Text;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
@@ -51,7 +53,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFS() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tADeg, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -131,7 +133,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFSUnion() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tADeg, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -215,7 +217,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFSToClient() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tADeg;
     {
       String[] names = getUniqueNames(2);
@@ -274,7 +276,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFSVaryDegreeTable() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tADeg, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -419,7 +421,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFSNoDegTable() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -516,7 +518,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFSAll() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -585,7 +587,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testAdjBFSNoFilter() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -656,7 +658,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testEdgeBFS() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tETDeg, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -841,7 +843,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testEdgeBFS_Multi_Hyper() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tETDeg, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -933,7 +935,7 @@ public class BFSTest extends AccumuloTestBase {
 
   @Test
   public void testEdgeBFS2() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tETDeg, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -1021,7 +1023,7 @@ public class BFSTest extends AccumuloTestBase {
    */
   @Test
   public void testSingleBFS() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tS, tR;
     {
       String[] names = getUniqueNames(2);
@@ -1226,7 +1228,7 @@ public class BFSTest extends AccumuloTestBase {
 
   @Test
   public void testGenerateDegreeTable() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tE, tET, tEDegOutIn, tEDegOut, tEDegIn, tEDegEdge, tEDegWeightEdge;
     {
       String[] names = getUniqueNames(7);

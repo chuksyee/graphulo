@@ -9,7 +9,10 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.clientImpl.ClientContext;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.admin.TableOperations;
@@ -71,7 +74,7 @@ public class AccumuloBugTest extends AccumuloTestBase {
   }
 
   private void testScansOnTablets(final int numtablets) throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector connector = tester.getConnector();
+    ClientContext connector = (ClientContext)tester.getConnector();
     final String tA = getUniqueNames(1)[0];
 
     // create a table with given number of tablets, inserting one entry into each tablet
@@ -86,7 +89,7 @@ public class AccumuloBugTest extends AccumuloTestBase {
     TestUtil.createTestTable(connector, tA, splits, input);
 
     IteratorSetting itset = RemoteSourceIterator.iteratorSetting(
-        25, connector.getInstance().getZooKeepers(), 5000, connector.getInstance().getInstanceName(),
+        25, connector.getZooKeepers(), 5000, connector.getInstanceName(),
         tA, connector.whoami(), new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8), Authorizations.EMPTY, null, null,
         false, null);
 
@@ -114,7 +117,7 @@ public class AccumuloBugTest extends AccumuloTestBase {
    */
   @Test
   public void testSplitDuringWriteHeavy() throws TableNotFoundException, AccumuloSecurityException, AccumuloException, InterruptedException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
     TableOperations tops = conn.tableOperations();
     final String t = getUniqueNames(1)[0];
     TestUtil.createTestTable(conn, t);

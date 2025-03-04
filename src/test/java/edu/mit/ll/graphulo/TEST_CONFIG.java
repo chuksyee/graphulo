@@ -4,9 +4,9 @@ import edu.mit.ll.graphulo.util.KnownBugSuite;
 import edu.mit.ll.graphulo_ocean.GenomicEncoderTest;
 import edu.mit.ll.graphulo_ocean.OceanTest;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.junit.runner.RunWith;
@@ -120,12 +120,13 @@ public class TEST_CONFIG {
     String instancename = null, zookeepers = null, user = null, pass = null;
     if (filename != null && !filename.isEmpty())
       try {
-        Configuration properties = new PropertiesConfiguration(filename);
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.read(new BufferedReader(new FileReader(filename)));
         instancename = properties.getString(KEY_INSTANCE_NAME);
         zookeepers = properties.getString(KEY_ZOOKEEPERS);
         user = properties.getString(KEY_USER);
         pass = properties.getString(KEY_PASSWORD);
-      } catch (ConfigurationException e) {
+      } catch (IOException | ConfigurationException e) {
         log.warn("Couldn't find a valid properties file named " + filename);
       }
     instancename = System.getProperty(KEY_INSTANCE_NAME, instancename);

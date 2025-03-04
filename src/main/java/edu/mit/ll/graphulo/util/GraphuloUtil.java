@@ -72,6 +72,7 @@ public class GraphuloUtil {
   public static final Value VALUE_ONE_STRING = new Value("1".getBytes(StandardCharsets.UTF_8));
   public static final byte[] VALUE_ONE_STRING_BYTES = "1".getBytes(StandardCharsets.UTF_8);
   public static final Value VALUE_ONE_VLONG = new Value(GraphuloUtil.writeVUnsignedLong(1));
+  public static final String GRAPHULO_PROPERTIES= "graphulo.properties"; // graphulo.properties filename
 
   private GraphuloUtil() {
   }
@@ -628,14 +629,14 @@ System.out.println(",a,,".split(",",-1).length + Arrays.toString(",a,,".split(",
 
     int pos1 = colFilter.indexOf(':');
     if (pos1 == -1) { // no ranges - collection of singleton texts
-      Set<Column> colset = new HashSet<>();
+      Set<Column> colset = new HashSet<Column>();
       for (Text text : GraphuloUtil.d4mRowToTexts(colFilter)) {
         byte[] by = text.copyBytes();
 //        log.debug("Printing characters of string TEXT LIM: "+ Key.toPrintableString(by, 0, text.getLength(), 100));
 //        log.debug("Printing characters of string TEXT    : "+ Key.toPrintableString(by, 0, by.length, 100));
         colset.add(new Column(EMPTY_BYTES, text.copyBytes(), EMPTY_BYTES));
       }
-      return new ColumnQualifierFilter(skvi, colset);
+      return  ColumnQualifierFilter.wrap(skvi, colset);
 
     } else {
       SortedSet<Range> ranges = GraphuloUtil.d4mRowToRanges(colFilter);
@@ -1165,4 +1166,24 @@ System.out.println(",a,,".split(",",-1).length + Arrays.toString(",a,,".split(",
     return l;
   }
 
+  public static String getAccumuloUser() {
+    String DEFAULT_ACCUMULO_USER="AccumuloUser";
+    String accumUser=null;
+    /*
+     * Get username 
+     *    from java command-line argument -Daccumulo.user
+     *    from environment variable (ACCUMULO_USER)
+     *    ???from property file (accumulo.user)???
+     */
+    String key="accumulo.user";
+    accumUser = System.getProperty(key);
+    if (accumUser == null) {
+      // Try the getting from the environment variable
+      accumUser= System.getenv("ACCUMULO_USER");
+      if(accumUser == null) {
+         accumUser = DEFAULT_ACCUMULO_USER;
+      }
+    }
+    return accumUser;
+  }
 }

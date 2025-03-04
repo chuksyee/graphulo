@@ -6,8 +6,9 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -16,10 +17,13 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.core.trace.DistributedTrace;
-import org.apache.htrace.Sampler;
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
+//import org.apache.accumulo.core.trace.DistributedTrace;
+import org.apache.accumulo.core.trace.TraceUtil;
+//import org.apache.htrace.Sampler;
+//import org.apache.htrace.Trace;
+//import org.apache.htrace.TraceScope;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -38,16 +42,16 @@ public class TraceTest extends AccumuloTestBase {
 
   @Test
   public void printTraceConfig() {
-    ClientConfiguration cc = ClientConfiguration.loadDefault();
-    System.out.println("trace.span.receiver ClientConfiguratio default:");
-    System.out.println("TRACE_ZK_PATH  "+cc.get(ClientConfiguration.ClientProperty.TRACE_ZK_PATH));
-    System.out.println("TRACE_SPAN_RECEIVERS  " + cc.get(ClientConfiguration.ClientProperty.TRACE_SPAN_RECEIVERS));
-    TestUtil.printIterator(cc.getAllPropertiesWithPrefix(ClientConfiguration.ClientProperty.TRACE_SPAN_RECEIVER_PREFIX).entrySet().iterator());
+    //ClientConfiguration cc = ClientConfiguration.loadDefault();
+    //System.out.println("trace.span.receiver ClientConfiguratio default:");
+    //System.out.println("TRACE_ZK_PATH  "+cc.get(ClientConfiguration.ClientProperty.TRACE_ZK_PATH));
+    //System.out.println("TRACE_SPAN_RECEIVERS  " + cc.get(ClientConfiguration.ClientProperty.TRACE_SPAN_RECEIVERS));
+    //TestUtil.printIterator(cc.getAllPropertiesWithPrefix(ClientConfiguration.ClientProperty.TRACE_SPAN_RECEIVER_PREFIX).entrySet().iterator());
   }
 
   @Test
   public void test1() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException, InterruptedException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA;
     {
       String[] names = getUniqueNames(1);
@@ -66,24 +70,31 @@ public class TraceTest extends AccumuloTestBase {
 //    String spanrcv = cc.get(ClientConfiguration.ClientProperty.TRACE_SPAN_RECEIVERS);
 
 
-    DistributedTrace.enable(null, "TraceTest"); // service name. hostname is auto-determined
+    //DistributedTrace.enable(null, "TraceTest"); // service name. hostname is auto-determined
 
     try {
-      try (TraceScope span = Trace.startSpan("readStep", Sampler.ALWAYS)) {
+      Span span = TraceUtil.startSpan(this.getClass(), "TraceTest");
+      try (Scope scope = span.makeCurrent()) {
         System.out.println("read before: ");
         for (Map.Entry<Key, Value> entry : scanner) {
           System.out.println(entry.getKey().toStringNoTime() + "    " + entry.getValue());
         }
+      } finally {
+        span.end();
       }
 
-      try (TraceScope span = Trace.startSpan("writeStep", Sampler.ALWAYS)) {
+      span = TraceUtil.startSpan(this.getClass(), "TraceTest");
+      try (Scope scope = span.makeCurrent()) {
         Mutation m = new Mutation("arow");
         m.put("acf", "acq", "aval");
         bw.addMutation(m);
         bw.flush();
+      } finally {
+        span.end();
       }
 
-      try (TraceScope span = Trace.startSpan("readStep", Sampler.ALWAYS)) {
+      span = TraceUtil.startSpan(this.getClass(), "TraceTest");
+      try (Scope scope = span.makeCurrent()) {
         System.out.println("read after: ");
         for (Map.Entry<Key, Value> entry : scanner) {
           System.out.println(entry.getKey().toStringNoTime() + "    " + entry.getValue());
@@ -94,10 +105,12 @@ public class TraceTest extends AccumuloTestBase {
           Assert.assertEquals("aval", entry.getValue().toString());
         }
         Thread.sleep(100);
+      } finally {
+        span.end();
       }
 
     } finally {
-      DistributedTrace.disable();
+      //DistributedTrace.disable();
       bw.close();
       scanner.close();
     }

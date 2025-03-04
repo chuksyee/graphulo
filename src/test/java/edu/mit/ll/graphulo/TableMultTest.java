@@ -8,7 +8,8 @@ import edu.mit.ll.graphulo.util.GraphuloUtil;
 import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
@@ -57,7 +58,7 @@ public class TableMultTest extends AccumuloTestBase {
   @Test
 //  @Ignore("New version only works with BatchWriter. KnownBug: ACCUMULO-3645")
   public void test1() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -134,7 +135,7 @@ public class TableMultTest extends AccumuloTestBase {
   @Test
 //  @Ignore("New version only works with BatchWriter. KnownBug: ACCUMULO-3645")
   public void testLongLex() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -204,7 +205,7 @@ public class TableMultTest extends AccumuloTestBase {
 
   /** @return null if user already has these authorizations; otherwise previous authorizations of the user. */
   private Authorizations grantAuthorizations(String... auths) throws AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     String user = conn.whoami();
 
     Authorizations beforeAuthorizations = conn.securityOperations().getUserAuthorizations(user);
@@ -249,7 +250,7 @@ public class TableMultTest extends AccumuloTestBase {
   @Test
 //  @Ignore("New version only works with BatchWriter. KnownBug: ACCUMULO-3645")
   public void test1WithAuthoriations() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     String authA = "testvisA", authB = "testvisB", authC = "testvisC";
     String user = conn.whoami();
@@ -337,7 +338,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testRowFilter() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tAT, tB, tC;
     {
@@ -402,7 +403,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testRowFilterColFilterATB() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tAT, tB, tC, tCT;
     {
@@ -485,7 +486,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testAlsoDoAA() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tAT, tB, tC, tCT;
     {
@@ -569,7 +570,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testAlsoDoAAAlsoEmitA() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tAT, tB, tC, tCT;
     {
@@ -654,7 +655,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testCloneMultiply() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -722,7 +723,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testCloneMultiplyAndEmitA() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -794,7 +795,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testCloneMultiplyAndEmitAAndUseIterators() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -867,7 +868,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testCloneMultiplyAndEmitAAndUseIterators2() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {
@@ -944,7 +945,7 @@ public class TableMultTest extends AccumuloTestBase {
    */
   @Test
   public void testCloneMultiplyAndEmitAAndUseIterators3() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     final String tC, tAT, tB, tCT;
     {

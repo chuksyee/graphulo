@@ -9,7 +9,9 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.admin.TableOperations;
@@ -49,7 +51,7 @@ public class AccumuloApiTest extends AccumuloTestBase {
    */
   @Test
   public void testCombineSameWrites() throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tR;
     {
       String[] names = getUniqueNames(1);
@@ -132,7 +134,7 @@ public class AccumuloApiTest extends AccumuloTestBase {
    */
   @Test
   public void testSplitDuringWrite() throws TableNotFoundException, AccumuloSecurityException, AccumuloException, InterruptedException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     TableOperations tops = conn.tableOperations();
     final String t = getUniqueNames(1)[0];
     TestUtil.createTestTable(conn, t);

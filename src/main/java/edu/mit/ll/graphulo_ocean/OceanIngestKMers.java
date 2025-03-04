@@ -1,6 +1,9 @@
 package edu.mit.ll.graphulo_ocean;
 
 import com.beust.jcommander.Parameter;
+
+import edu.mit.ll.graphulo.util.GraphuloUtil;
+
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 //import org.apache.accumulo.core.client.ClientConfiguration;
@@ -105,8 +108,9 @@ public class OceanIngestKMers {
     //Instance instance = new ZooKeeperInstance(cc);
     try {
       //return instance.getConnector("AccumuloUser", auth);
-      return Accumulo.newClient().to(instanceName,zookeeperHost).as(auth.getPrincipal(),auth).build();
-    } catch (AccumuloException | AccumuloSecurityException e) {
+      String username= GraphuloUtil.getAccumuloUser();
+      return Accumulo.newClient().to(instanceName,zookeeperHost).as(username,auth).build();
+    } catch (Exception e) {
       throw new RuntimeException("Trouble authenticating to database "+txe1,e);
     }
   }

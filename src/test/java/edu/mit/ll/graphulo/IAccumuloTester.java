@@ -1,6 +1,8 @@
 package edu.mit.ll.graphulo;
 
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.junit.rules.TestRule;
 
@@ -11,7 +13,7 @@ import org.junit.rules.TestRule;
 public interface IAccumuloTester extends TestRule {
 
 
-    Connector getConnector();
+    AccumuloClient getConnector();
     String getUsername();
     PasswordToken getPassword();
 

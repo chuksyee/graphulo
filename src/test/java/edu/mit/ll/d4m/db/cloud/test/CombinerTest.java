@@ -11,7 +11,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.accumulo.core.client.ClientConfiguration;
+//import org.apache.accumulo.core.client.ClientConfiguration;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.iterators.Combiner;
 import org.apache.accumulo.core.iterators.IteratorUtil;
@@ -21,7 +21,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 
 import edu.mit.ll.d4m.db.cloud.accumulo.AccumuloConnection;
@@ -41,7 +41,7 @@ public class CombinerTest {
 	private String columnVisibility="";
 	private AccumuloConnection connection;
 
-	private ClientConfiguration config;
+	//private ClientConfiguration config;
     private Configuration properties;
 
 	@Before

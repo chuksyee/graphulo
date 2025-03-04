@@ -6,7 +6,8 @@ import edu.mit.ll.graphulo.util.AccumuloTestBase;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
@@ -16,7 +17,7 @@ import org.apache.accumulo.core.iterators.Combiner;
 import org.apache.accumulo.core.iterators.LongCombiner;
 import org.apache.accumulo.core.iterators.user.SummingCombiner;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableLong;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ public class SingleBFSExample extends AccumuloTestBase {
 //    Connector c = instance.getConnector("root", new PasswordToken("secret"));
     // Here, we connect to the Accumulo instance given by TEST_CONFIG.java.
     // You can change this by passing the option -DTEST_CONFIG=local or -DTEST_CONFIG=txe1 or similar.
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
 
     // Delete result table if it exists, so that we don't sum in previous runs with our results.
     if (conn.tableOperations().exists(Rtable))

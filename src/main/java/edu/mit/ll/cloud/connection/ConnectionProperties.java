@@ -114,7 +114,7 @@ public class ConnectionProperties {
        Properties props = new Properties();
        props.setProperty("instance.name", this.instanceName);
        props.setProperty("instance.zookeepers", this.host);
-       props.setProperty("instance.zookeepers.timeout", new String(this.sessionTimeOut));
+       props.setProperty("instance.zookeepers.timeout", Integer.toString(this.sessionTimeOut));
 	   props.setProperty("auth.type", "password");
 	   props.setProperty("auth.principal", this.user);
 	   props.setProperty("auth.token", this.pass);

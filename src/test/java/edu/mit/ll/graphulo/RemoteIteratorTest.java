@@ -8,10 +8,12 @@ import edu.mit.ll.graphulo.util.AccumuloTestBase;
 import edu.mit.ll.graphulo.util.GraphuloUtil;
 import edu.mit.ll.graphulo.util.SerializationUtil;
 import edu.mit.ll.graphulo.util.TestUtil;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.clientImpl.ClientContext;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
@@ -57,7 +59,7 @@ public class RemoteIteratorTest extends AccumuloTestBase {
   @SuppressWarnings("unchecked")
   @Test
   public void testWriteTableTranspose() throws AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
 
     final String tA, tR, tRT;
     {
@@ -93,8 +95,8 @@ public class RemoteIteratorTest extends AccumuloTestBase {
     BatchScanner bs = conn.createBatchScanner(tA, Authorizations.EMPTY, 2);
     bs.setRanges(Collections.singleton(new Range("A1",true,"B",true)));
     Map<String,String> opt = new HashMap<>();
-    opt.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getInstance().getZooKeepers());
-    opt.put(RemoteSourceIterator.INSTANCENAME, conn.getInstance().getInstanceName());
+    opt.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getZooKeepers());
+    opt.put(RemoteSourceIterator.INSTANCENAME, conn.getInstanceName());
     opt.put(RemoteSourceIterator.TABLENAME, tR);
     opt.put(RemoteWriteIterator.TABLENAMETRANSPOSE, tRT);
     opt.put(RemoteSourceIterator.USERNAME, conn.whoami());
@@ -137,7 +139,7 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
   @Test
   public void testSource() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
 
     final String tableName, tableName2;
     {
@@ -189,9 +191,9 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
     Scanner scanner = conn.createScanner(tableName2, Authorizations.EMPTY);
     Map<String, String> itprops = new HashMap<>();
-    itprops.put(RemoteSourceIterator.INSTANCENAME, conn.getInstance().getInstanceName());
+    itprops.put(RemoteSourceIterator.INSTANCENAME, conn.getInstanceName());
     itprops.put(RemoteSourceIterator.TABLENAME, tableName);
-    itprops.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getInstance().getZooKeepers());
+    itprops.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getZooKeepers());
     //itprops.put(RemoteSourceIterator.TIMEOUT,"5000");
     itprops.put(RemoteSourceIterator.USERNAME, tester.getUsername());
 //    itprops.put(RemoteSourceIterator.PASSWORD, new String(tester.getPassword().getPassword()));
@@ -217,7 +219,7 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
   @Test
   public void testSourceSubset() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
 
     final String tableName, tableName2;
     {
@@ -259,9 +261,9 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
     Scanner scanner = conn.createScanner(tableName2, Authorizations.EMPTY);
     Map<String, String> itprops = new HashMap<>();
-    itprops.put(RemoteSourceIterator.INSTANCENAME, conn.getInstance().getInstanceName());
+    itprops.put(RemoteSourceIterator.INSTANCENAME, conn.getInstanceName());
     itprops.put(RemoteSourceIterator.TABLENAME, tableName);
-    itprops.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getInstance().getZooKeepers());
+    itprops.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getZooKeepers());
     //itprops.put(RemoteSourceIterator.TIMEOUT,"5000");
     itprops.put(RemoteSourceIterator.USERNAME, tester.getUsername());
     itprops.put(RemoteSourceIterator.PASSWORD, new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
@@ -306,7 +308,7 @@ public class RemoteIteratorTest extends AccumuloTestBase {
   /** Now with column subsets in addition to row subsets. */
   @Test
   public void testSourceSubsetColumns() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
 
     final String tableName, tableName2;
     {
@@ -333,9 +335,9 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
     Scanner scanner = conn.createScanner(tableName2, Authorizations.EMPTY);
     Map<String, String> itprops = new HashMap<>();
-    itprops.put(RemoteSourceIterator.INSTANCENAME, conn.getInstance().getInstanceName());
+    itprops.put(RemoteSourceIterator.INSTANCENAME, conn.getInstanceName());
     itprops.put(RemoteSourceIterator.TABLENAME, tableName);
-    itprops.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getInstance().getZooKeepers());
+    itprops.put(RemoteSourceIterator.ZOOKEEPERHOST, conn.getZooKeepers());
     //itprops.put(RemoteSourceIterator.TIMEOUT,"5000");
     itprops.put(RemoteSourceIterator.USERNAME, tester.getUsername());
     itprops.put(RemoteSourceIterator.PASSWORD, new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
@@ -407,7 +409,7 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
   @Test
   public void testMerge() throws AccumuloSecurityException, AccumuloException, TableNotFoundException, TableExistsException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
 
     final String tableName, tableName2;
     {
@@ -442,9 +444,9 @@ public class RemoteIteratorTest extends AccumuloTestBase {
 
     Scanner scanner = conn.createScanner(tableName2, Authorizations.EMPTY);
     Map<String, String> itprops = new HashMap<>();
-    itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.INSTANCENAME, conn.getInstance().getInstanceName());
+    itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.INSTANCENAME, conn.getInstanceName());
     itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.TABLENAME, tableName);
-    itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.ZOOKEEPERHOST, conn.getInstance().getZooKeepers());
+    itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.ZOOKEEPERHOST, conn.getZooKeepers());
     //itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator+RemoteSourceIterator.TIMEOUT,"5000");
     itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.USERNAME, tester.getUsername());
     itprops.put(RemoteMergeIterator.PREFIX_RemoteIterator + RemoteSourceIterator.PASSWORD, new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));

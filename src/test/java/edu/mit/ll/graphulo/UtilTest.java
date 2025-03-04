@@ -22,6 +22,7 @@ import org.apache.accumulo.core.client.sample.SamplerConfiguration;
 import org.apache.accumulo.core.conf.AccumuloConfiguration;
 import org.apache.accumulo.core.data.ArrayByteSequence;
 import org.apache.accumulo.core.data.ByteSequence;
+import org.apache.accumulo.core.data.TableId;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
@@ -848,15 +849,7 @@ public class UtilTest {
 
   public static IteratorEnvironment mockIteratorEnvrironment(final DynamicIteratorSetting.MyIteratorScope scope) {
     return new IteratorEnvironment() {
-      @Override
-      public SortedKeyValueIterator<Key, Value> reserveMapFileReader(String mapFileName) throws IOException {
-        return null;
-      }
 
-      @Override
-      public AccumuloConfiguration getConfig() {
-        return null;
-      }
 
       @Override
       public IteratorUtil.IteratorScope getIteratorScope() {
@@ -876,11 +869,6 @@ public class UtilTest {
       }
 
       @Override
-      public void registerSideChannel(SortedKeyValueIterator<Key, Value> iter) {
-
-      }
-
-      @Override
       public Authorizations getAuthorizations() {
         return null;
       }
@@ -893,6 +881,14 @@ public class UtilTest {
       @Override
       public boolean isSamplingEnabled() {
         return false;
+      }
+      @Override
+      public boolean isUserCompaction() {
+        return false;
+      }
+      @Override
+      public TableId getTableId() {
+        return null;
       }
 
       @Override

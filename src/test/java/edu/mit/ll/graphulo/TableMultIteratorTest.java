@@ -7,7 +7,9 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.clientImpl.ClientContext;
+//import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
@@ -55,7 +57,7 @@ public class TableMultIteratorTest extends AccumuloTestBase {
    */
   @Test
   public void testDotMultIteratorScan() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
     String[] names = getUniqueNames(3);
 
     final String tableNameA = names[0];
@@ -82,14 +84,14 @@ public class TableMultIteratorTest extends AccumuloTestBase {
 
     Scanner scanner = conn.createScanner(tableNameC, Authorizations.EMPTY);
     Map<String, String> itprops = new HashMap<>();
-    itprops.put("AT.instanceName", conn.getInstance().getInstanceName());
+    itprops.put("AT.instanceName", conn.getInstanceName());
     itprops.put("AT.tableName", tableNameA);
-    itprops.put("AT.zookeeperHost", conn.getInstance().getZooKeepers());
+    itprops.put("AT.zookeeperHost", conn.getZooKeepers());
     itprops.put("AT.username", tester.getUsername());
     itprops.put("AT.password", new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
-    itprops.put("B.instanceName", conn.getInstance().getInstanceName());
+    itprops.put("B.instanceName", conn.getInstanceName());
     itprops.put("B.tableName", tableNameBT);
-    itprops.put("B.zookeeperHost", conn.getInstance().getZooKeepers());
+    itprops.put("B.zookeeperHost", conn.getZooKeepers());
     itprops.put("B.username", tester.getUsername());
     itprops.put("B.password", new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
     itprops.put("dotmode", TwoTableIterator.DOTMODE.ROW.name());
@@ -160,7 +162,7 @@ public class TableMultIteratorTest extends AccumuloTestBase {
 //    @Ignore("New version only works with BatchWriter")
   @Test
   public void testTableMultIterator() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    ClientContext conn = (ClientContext)tester.getConnector();
     final String tablePrefix = "testTableMult_";
 
     final String tableNameAT = tablePrefix + "AT";
@@ -205,9 +207,9 @@ public class TableMultIteratorTest extends AccumuloTestBase {
 
     {
       Map<String, String> itprops = new HashMap<>();
-      itprops.put("AT.instanceName", conn.getInstance().getInstanceName());
+      itprops.put("AT.instanceName", conn.getInstanceName());
       itprops.put("AT.tableName", tableNameAT);
-      itprops.put("AT.zookeeperHost", conn.getInstance().getZooKeepers());
+      itprops.put("AT.zookeeperHost", conn.getZooKeepers());
       itprops.put("AT.username", tester.getUsername());
       itprops.put("AT.password", new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
 //            itprops.put("B.instanceName",conn.getInstance().getInstanceName());
@@ -244,9 +246,9 @@ public class TableMultIteratorTest extends AccumuloTestBase {
     // Test use of a filter on B.
     {
       Map<String, String> itprops = new HashMap<>();
-      itprops.put("AT.instanceName", conn.getInstance().getInstanceName());
+      itprops.put("AT.instanceName", conn.getInstanceName());
       itprops.put("AT.tableName", tableNameAT);
-      itprops.put("AT.zookeeperHost", conn.getInstance().getZooKeepers());
+      itprops.put("AT.zookeeperHost", conn.getZooKeepers());
       itprops.put("AT.username", tester.getUsername());
       itprops.put("AT.password", new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
 //            itprops.put("B.instanceName",conn.getInstance().getInstanceName());
@@ -293,14 +295,14 @@ public class TableMultIteratorTest extends AccumuloTestBase {
     // test writing to C with monitoring
     {
       Map<String, String> itprops = new HashMap<>();
-      itprops.put("AT.instanceName", conn.getInstance().getInstanceName());
+      itprops.put("AT.instanceName", conn.getInstanceName());
       itprops.put("AT.tableName", tableNameAT);
-      itprops.put("AT.zookeeperHost", conn.getInstance().getZooKeepers());
+      itprops.put("AT.zookeeperHost", conn.getZooKeepers());
       itprops.put("AT.username", tester.getUsername());
       itprops.put("AT.password", new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
-      itprops.put("C.instanceName", conn.getInstance().getInstanceName());
+      itprops.put("C.instanceName", conn.getInstanceName());
       itprops.put("C.tableName", tableNameC);
-      itprops.put("C.zookeeperHost", conn.getInstance().getZooKeepers());
+      itprops.put("C.zookeeperHost", conn.getZooKeepers());
       itprops.put("C.username", tester.getUsername());
       itprops.put("C.password", new String(tester.getPassword().getPassword(), StandardCharsets.UTF_8));
       itprops.put("C.numEntriesCheckpoint", "1");

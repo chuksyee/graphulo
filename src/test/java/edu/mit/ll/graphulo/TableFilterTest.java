@@ -3,6 +3,7 @@ package edu.mit.ll.graphulo;
 import edu.mit.ll.graphulo.skvi.SmallLargeRowFilter;
 import edu.mit.ll.graphulo.util.AccumuloTestBase;
 import edu.mit.ll.graphulo.util.TestUtil;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
@@ -27,7 +28,7 @@ public class TableFilterTest extends AccumuloTestBase {
 
   @Test
   public void testSmallLargeRowFilter() throws TableNotFoundException, AccumuloSecurityException, AccumuloException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA;
     {
       String[] names = getUniqueNames(1);

@@ -6,7 +6,8 @@ import edu.mit.ll.graphulo.util.TestUtil;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
+//import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -45,7 +46,7 @@ public class LineTest extends AccumuloTestBase {
    */
   @Test
   public void testLineUndirectedSimple() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tAT, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -125,7 +126,7 @@ public class LineTest extends AccumuloTestBase {
    */
   @Test
   public void testLineDirectedSimple() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tAT, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -226,7 +227,7 @@ public class LineTest extends AccumuloTestBase {
    */
   @Test
   public void testLineDirected() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tAT, tR, tRT;
     {
       String[] names = getUniqueNames(4);
@@ -360,7 +361,7 @@ public class LineTest extends AccumuloTestBase {
    */
   @Test
   public void testLineUndirected() throws TableExistsException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     final String tA, tAT, tR, tRT;
     {
       String[] names = getUniqueNames(4);

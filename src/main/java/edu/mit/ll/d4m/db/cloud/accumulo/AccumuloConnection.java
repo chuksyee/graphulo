@@ -25,7 +25,11 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.client.admin.InstanceOperations;
 import org.apache.accumulo.core.data.InstanceId;
+import org.apache.accumulo.core.data.TableId;
 import org.apache.accumulo.core.clientImpl.ClientContext;
+import org.apache.accumulo.core.clientImpl.ClientInfoImpl;
+import org.apache.accumulo.core.clientImpl.ClientInfo;
+
 import org.apache.accumulo.core.clientImpl.Credentials;
 import org.apache.accumulo.core.util.tables.TableMap;
 //import org.apache.accumulo.core.client.impl.MasterClient;
@@ -40,6 +44,7 @@ import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
 //import org.apache.accumulo.core.master.thrift.MasterClientService;
 import org.apache.accumulo.core.manager.thrift.ManagerClientService;
 import org.apache.accumulo.core.rpc.clients.ManagerThriftClient;
+import org.apache.accumulo.core.rpc.clients.ThriftClientTypes;
 import org.apache.accumulo.core.rpc.ThriftUtil;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.securityImpl.thrift.TCredentials;
@@ -62,7 +67,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
-
+import com.google.common.net.HostAndPort;
 //${accumulo.VERSION.1.6}import org.apache.accumulo.core.security.Credentials;  // 1.6
 //${accumulo.VERSION.1.6}import org.apache.accumulo.core.util.ThriftUtil; // 1.6
 
@@ -182,18 +187,26 @@ public class AccumuloConnection {
 	public ManagerClientService.Client getMasterClient() throws TTransportException {
 		//${accumulo.VERSION.1.6}return MasterClient.getConnection(getInstance()); // 1.6
     //return MasterClient.getConnection(new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration())); // 1.7
-         ManagerThriftClient mtc = new ManagerThriftClient();
-        //TODO -FIXME 
-	    return null;
+        //ManagerThriftClient mtc = new ManagerThriftClient();
+		HostAndPort server = HostAndPort.fromString(this.conn.getHost());
+        //TODO -FIXME  ClientContext context
+		//eg AccumuloClient client = Accumulo.newClient().from(getClientProps()).build()
+        //ClientInfoImpl cii = new ClientInfoImpl(this.conn.getProperties());
+		ClientContext context= (ClientContext)this.connector;
+		ManagerClientService.Client client = ThriftUtil.getClient(ThriftClientTypes.MANAGER, server, context);
+         
+	    return client;
 	}
 
 	public TabletServerClientService.Iface getTabletClient (String tserverAddress) throws TTransportException {
 		HostAndPort address = AddressUtil.parseAddress(tserverAddress,false);
     //${accumulo.VERSION.1.6}return ThriftUtil.getTServerClient( tserverAddress, instance.getConfiguration()); // 1.6
-    return ThriftUtil.getTServerClient( address, new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration())); // 1.7
-	}
+    // ThriftUtil.getClientNoTimeout( ThriftClientTypes, HostAndPort, ClientContext)
+      //return ThriftUtil.getTServerClient( address, new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration())); // 1.7
+        return ThriftUtil.getClient(ThriftClientTypes.TABLET_SERVER, address,(ClientContext)this.connector);
+    }
 
-    public Map<String, String> getNameToIdMap() {
+    public Map<String, TableId> getNameToIdMap() {
 		/***
 		 * TODO FIX - TableMap(ClientContext context) 
 		 */
@@ -284,8 +297,13 @@ public class AccumuloConnection {
 			// 1.7: org.apache.accumulo.core.client.impl.Credentials#toThrift()
 			// in order to create compatibility to 1.6 and 1.7, since the Credentials class moved.
 			// This may still break in later versions because Credentials is non-public API.
+			//tCred = new TCredentials(principal, token.getClass().getName(),
+			//		ByteBuffer.wrap(AuthenticationToken.AuthenticationTokenSerializer.serialize(token)), instance.getInstanceID());
+			InstanceOperations iops = this.connector.instanceOperations();
+			InstanceId iid = iops.getInstanceId();
 			tCred = new TCredentials(principal, token.getClass().getName(),
-					ByteBuffer.wrap(AuthenticationToken.AuthenticationTokenSerializer.serialize(token)), instance.getInstanceID());
+					ByteBuffer.wrap(AuthenticationToken.AuthenticationTokenSerializer.serialize(token)), iid.canonical());
+
 			if (token.isDestroyed())
 				throw new RuntimeException("Token has been destroyed", new AccumuloSecurityException(principal, SecurityErrorCode.TOKEN_EXPIRED));
 
@@ -322,10 +340,28 @@ public class AccumuloConnection {
 	}
 
 	public String locateTablet(String tableName, String splitName) {
+		String tabletName = null; //tablet server name
+        try {
+            TableId tabId = TableId.of(tableName);
+			TabletLocator tc = TabletLocator.getLocator((ClientContext)this.connector, tabId);
+			org.apache.accumulo.core.clientImpl.TabletLocator.TabletLocation loc =
+				tc.locateTablet((ClientContext)this.connector, new Text(splitName), false, false);
+            tabletName = loc.getTserverLocation();
+		} catch (TableNotFoundException | AccumuloException | AccumuloSecurityException e) {
+			log.warn("",e);
+			e.printStackTrace();
+		}
+
+		return tabletName;
+	}
+
+/** 
+	public String SAVE_ORIGINAL_locateTablet(String tableName, String splitName) {
 		String tabletName = null;
 		try {
 			//${accumulo.VERSION.1.6}TabletLocator tc = TabletLocator.getLocator(instance, new Text(Tables.getTableId(instance, tableName))); // 1.6 change to getLocator for 1.6
-      ClientContext cc = new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration()); // 1.7
+
+			ClientContext cc = new ClientContext(instance, new Credentials(principal, token), instance.getConfiguration()); // 1.7
 			// Change in API in 1.7 and 1.8 -- second parameter is String instead of Text
 			String str = Tables.getTableId(instance, tableName);
 
@@ -334,7 +370,7 @@ public class AccumuloConnection {
 			org.apache.accumulo.core.clientImpl.TabletLocator.TabletLocation loc =
 					//${accumulo.VERSION.1.6}tc.locateTablet(new Credentials(principal, token), new Text(splitName), false, false); // 1.6
           tc.locateTablet(cc, new Text(splitName), false, false); // 1.7
-			tabletName = loc.tablet_location;
+			//tabletName = loc.tablet_location;
 			log.debug("TableName="+tableName+", TABLET_NAME = "+tabletName);
 		} catch (TableNotFoundException | AccumuloException | AccumuloSecurityException e) {
 			log.warn("",e);
@@ -342,9 +378,9 @@ public class AccumuloConnection {
 		}
 
 
-    return tabletName;
+        return tabletName;
 	}
-
+*/
 	private TabletLocator getTabletLocator(ClientContext cc, String tableid) {
 		// first try new one
 		for (Method method : TabletLocator.class.getMethods()) {
@@ -364,6 +400,10 @@ public class AccumuloConnection {
 			}
 		}
 		throw new RuntimeException("Cannot locate tablets for tableid "+tableid);
+	}
+
+	public AccumuloClient getAccumuloClient() {
+		return this.connector;
 	}
 }
 

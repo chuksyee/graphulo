@@ -4,7 +4,7 @@ import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.minicluster.MiniAccumuloCluster;
 import org.apache.accumulo.minicluster.MiniAccumuloConfig;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -23,9 +23,9 @@ public class MiniAccumuloTester extends ExternalResource implements IAccumuloTes
   private static final Logger log = LoggerFactory.getLogger(MiniAccumuloTester.class);
   private final boolean doDebug;
   /* Fixture State */
-  private File tempDir;
-  private MiniAccumuloCluster miniaccumulo;
-  private Instance instance;
+  private File tempDir =null;
+  private MiniAccumuloCluster miniaccumulo = null;
+  //private Instance instance;
   private static final String USER = "root";
   private static final String PASSWORD = "password";
   private int numTservers;
@@ -38,11 +38,14 @@ public class MiniAccumuloTester extends ExternalResource implements IAccumuloTes
     this.reuse = reuse;
   }
 
-  public Connector getConnector() {
-    Connector c;
+  public AccumuloClient getConnector() {
+    AccumuloClient c =null;
     try {
-      c = instance.getConnector(USER, new PasswordToken(PASSWORD));
-    } catch (AccumuloException | AccumuloSecurityException e) {
+      //c = instance.getConnector(USER, new PasswordToken(PASSWORD));
+      MiniAccumuloConfig maconfig = miniaccumulo.getConfig();
+      PasswordToken token = new PasswordToken(PASSWORD);
+      c= miniaccumulo.createAccumuloClient(USER,  token);
+    } catch (Exception e) {
       log.error("failed to connect to MiniAccumulo instance", e);
       throw new RuntimeException(e);
     }
@@ -61,7 +64,7 @@ public class MiniAccumuloTester extends ExternalResource implements IAccumuloTes
 
   @Override
   protected void before() throws Throwable {
-    if (instance == null) {
+    if (miniaccumulo == null) {
       StopWatch sw = new StopWatch();
       sw.start();
       tempDir = Files.createTempDirectory("tempMini", new FileAttribute<?>[]{}).toFile();
@@ -85,17 +88,17 @@ public class MiniAccumuloTester extends ExternalResource implements IAccumuloTes
         Thread.sleep(10000);
       }
 
-      instance = new ZooKeeperInstance(miniaccumulo.getInstanceName(), miniaccumulo.getZooKeepers());
+      //instance = new ZooKeeperInstance(miniaccumulo.getInstanceName(), miniaccumulo.getZooKeepers());
       sw.stop();
-      log.debug("MiniAccumulo created instance: " + instance.getInstanceName() + " - creation time: " + sw.getTime() / 1000.0 + "s");
+      log.debug("MiniAccumulo created instance: " +  miniaccumulo.getInstanceName());
     } else
-      log.debug("Reusing MiniAccumulo instance "+instance.getInstanceName());
+      log.debug("Reusing MiniAccumulo instance "+ miniaccumulo.getInstanceName());
   }
 
   @Override
   protected void after() {
     if (!reuse && miniaccumulo != null) {
-      instance = null;
+      //instance = null;
       try {
         miniaccumulo.stop();
       } catch (IOException | InterruptedException e) {
@@ -104,7 +107,7 @@ public class MiniAccumuloTester extends ExternalResource implements IAccumuloTes
       }
       boolean b = tempDir.delete();
       miniaccumulo = null;
-      instance = null;
+      //instance = null;
       log.debug("tearDown ok - instance destroyed; tempDir deleted=" + b);
     }
   }

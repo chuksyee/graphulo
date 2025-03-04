@@ -2,7 +2,9 @@ package edu.mit.ll.graphulo;
 
 import edu.mit.ll.graphulo.util.TripleFileWriter;
 import edu.mit.ll.graphulo.util.AccumuloTestBase;
-import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
+//import org.apache.accumulo.core.client.Connector;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.Logger;
 import org.slf4j.Logger;
@@ -26,7 +28,7 @@ public class InsertDataTest extends AccumuloTestBase {
 
   @Test
   public void putSCALE10() throws FileNotFoundException {
-    Connector conn = tester.getConnector();
+    AccumuloClient conn = tester.getConnector();
     String baseName = PREFIX_TABLE_SCALE+"10A";
 
     TripleFileWriter tripleFileWriter = new TripleFileWriter(conn);
