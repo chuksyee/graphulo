@@ -34,7 +34,7 @@ public class D4mQueryTest10 {
 	String table = "";
 	String columnFamily="";
 	int i127=127;
-	String ASCI_127 = new Character((char)i127).toString();
+	String ASCI_127 = Character.valueOf((char)i127).toString();
 
 	@Before
 	public void setUp() throws Exception {

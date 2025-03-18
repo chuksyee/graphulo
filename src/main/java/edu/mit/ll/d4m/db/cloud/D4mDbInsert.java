@@ -86,6 +86,12 @@ public class D4mDbInsert extends D4mParent {
 		this.numThreads= numThreads;
 		this.connProps.setMaxNumThreads(this.numThreads);
 	}
+	public D4mDbInsert( ConnectionProperties connprop, String tableName) {
+		super();
+		this.tableName = tableName;
+
+		this.connProps = connprop;
+	}
 
 	public static void main(String[] args) throws Exception {
 

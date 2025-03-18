@@ -58,4 +58,5 @@ public class AccumuloTestConnection {
     public AccumuloConnection getAccumuloConnection() {
         return connection;
     }
+
 }

@@ -29,7 +29,7 @@ import org.apache.accumulo.core.data.TableId;
 import org.apache.accumulo.core.clientImpl.ClientContext;
 import org.apache.accumulo.core.clientImpl.ClientInfoImpl;
 import org.apache.accumulo.core.clientImpl.ClientInfo;
-
+import org.apache.accumulo.core.clientImpl.SyncingTabletLocator;
 import org.apache.accumulo.core.clientImpl.Credentials;
 import org.apache.accumulo.core.util.tables.TableMap;
 //import org.apache.accumulo.core.client.impl.MasterClient;
@@ -52,6 +52,8 @@ import org.apache.accumulo.core.tabletserver.thrift.TabletServerClientService;
 import org.apache.accumulo.core.util.AddressUtil;
 //import org.apache.accumulo.core.util.HostAndPort;
 import com.google.common.net.HostAndPort;
+import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
+import com.google.common.net.HostAndPort;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +69,9 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
-import com.google.common.net.HostAndPort;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 //${accumulo.VERSION.1.6}import org.apache.accumulo.core.security.Credentials;  // 1.6
 //${accumulo.VERSION.1.6}import org.apache.accumulo.core.util.ThriftUtil; // 1.6
 
@@ -111,8 +115,10 @@ public class AccumuloConnection {
         } else {
             this.auth= Authorizations.EMPTY;
         }
-        if (log.isDebugEnabled())
+        if (log.isDebugEnabled()) {
 	        log.debug("!!!WHOAMI="+this.connector.whoami());
+			log.debug("!!!AccumuloCient class name: "+ this.connector.getClass().getName());
+		}
 	}
 
 
@@ -265,7 +271,7 @@ public class AccumuloConnection {
 			log.warn("",e);
 			throw new D4mException(e);
 		}
-  }
+    }
 
 	public void checkIteratorConflicts(String tableName, IteratorSetting cfg, EnumSet<IteratorScope> scopes) throws D4mException 
 	{
@@ -299,10 +305,12 @@ public class AccumuloConnection {
 			// This may still break in later versions because Credentials is non-public API.
 			//tCred = new TCredentials(principal, token.getClass().getName(),
 			//		ByteBuffer.wrap(AuthenticationToken.AuthenticationTokenSerializer.serialize(token)), instance.getInstanceID());
+			final ClientContext context = (ClientContext)this.connector; 
 			InstanceOperations iops = this.connector.instanceOperations();
 			InstanceId iid = iops.getInstanceId();
-			tCred = new TCredentials(principal, token.getClass().getName(),
-					ByteBuffer.wrap(AuthenticationToken.AuthenticationTokenSerializer.serialize(token)), iid.canonical());
+			tCred = context.rpcCreds(); 
+			/* new TCredentials(principal, token.getClass().getName(),
+					ByteBuffer.wrap(AuthenticationToken.AuthenticationTokenSerializer.serialize(token)), iid.canonical()); */
 
 			if (token.isDestroyed())
 				throw new RuntimeException("Token has been destroyed", new AccumuloSecurityException(principal, SecurityErrorCode.TOKEN_EXPIRED));
@@ -341,11 +349,34 @@ public class AccumuloConnection {
 
 	public String locateTablet(String tableName, String splitName) {
 		String tabletName = null; //tablet server name
+		Text rowtxt = (splitName == null) ? new Text() : new Text(splitName);
+		final ClientContext context = (ClientContext)this.connector;
+		boolean successful = false;
+        int attempt =0;
         try {
-            TableId tabId = TableId.of(tableName);
-			TabletLocator tc = TabletLocator.getLocator((ClientContext)this.connector, tabId);
-			org.apache.accumulo.core.clientImpl.TabletLocator.TabletLocation loc =
-				tc.locateTablet((ClientContext)this.connector, new Text(splitName), false, false);
+            final TableId tabId = context.getTableId(tableName); //TableId.of(tableName);
+			log.debug("TableId:"+ context.getTableId(tableName) );
+			//TabletLocator tc = TabletLocator.getLocator(context, tabId);
+			TabletLocator tc = new SyncingTabletLocator(context,context.getTableId(tableName));
+			log.debug(" TabletLocator class name:" + tc.getClass().getName());
+			org.apache.accumulo.core.clientImpl.TabletLocator.TabletLocation loc = null;
+			while(!successful) {
+				if(attempt > 0) {
+					//sleep
+					sleepUninterruptibly(100, MILLISECONDS);
+				}
+				attempt++;
+				loc = tc.locateTablet(context, rowtxt, false, false);
+
+				if( loc == null) {
+					context.requireTableExists(tabId, tableName);
+					context.requireNotOffline(tabId, tableName);
+					continue;
+				} else  {
+					successful =true;
+				}
+				
+			}
             tabletName = loc.getTserverLocation();
 		} catch (TableNotFoundException | AccumuloException | AccumuloSecurityException e) {
 			log.warn("",e);

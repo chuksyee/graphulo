@@ -43,6 +43,7 @@ import org.apache.accumulo.core.tabletserver.thrift.TabletStats;
 import org.apache.accumulo.core.clientImpl.thrift.TInfo;
 import org.apache.accumulo.core.util.ColumnFQ;
 import org.apache.accumulo.core.util.Pair;
+import org.apache.accumulo.core.trace.TraceUtil;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,15 +151,17 @@ public class AccumuloTableOperations {
 			client = this.connection.getMasterClient();
 			//changed in accumulo-1.4
 			//			mmi = client.getMasterStats(null, getAuthInfo());
-			TInfo tinfo = new TInfo();
+			TInfo tinfo = TraceUtil.traceInfo();//new TInfo();
+			//context.rpcCreds()
 			ManagerMonitorInfo mmi = client.getManagerStats(tinfo,this.connection.getCredentials() );
-
+            log.debug("ManagerMonitorInfo.TserverInfoSize = "+ Integer.toString(mmi.getTServerInfoSize()));
 			list.addAll(mmi.getTServerInfo());
 		} catch(D4mException e) {
 			log.warn("",e);
 		} finally {
 			ThriftUtil.returnClient(client, (ClientContext)this.connection.getAccumuloClient());
 		}
+		log.debug("Number of TServerInfo: "+list.size());
 		return list;
 	}
 	private List<TabletStats> getTabletStatsList(List<TabletServerStatus> tserverNames, List<String> tableNames) throws D4mException {
