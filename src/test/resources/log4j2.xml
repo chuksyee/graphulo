@@ -35,9 +35,21 @@
     </Appenders>
     <Loggers>
     	<!-- Root logger referring to console appender -->
-        <Root level="debug" additivity="false">
+        <Root level="warn" additivity="false">
             <AppenderRef ref="console" />
             <appender-ref ref="fileLogger" />
         </Root>
+        <Logger name="org.apache.accumulo.core" level="INFO" additivity="false">
+            <AppenderRef ref="console" /> 
+        </Logger>
+        <Logger name="org.apache.accumulo.core.clientImpl" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" /> 
+        </Logger>
+        <Logger name="edu.mit.ll.d4m" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" /> 
+        </Logger>
+        <Logger name="edu.mit.ll.graphulo" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" /> 
+        </Logger>
     </Loggers>
 </Configuration>
