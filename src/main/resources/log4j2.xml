@@ -39,13 +39,13 @@
             <AppenderRef ref="console" />
             <AppenderRef ref="fileLogger" />
         </Root>
-        <Logger name="org.apache.accumulo.core" level="INFO" additivity=false>
+        <Logger name="org.apache.accumulo.core" level="INFO" additivity="false">
             <AppenderRef ref="console" /> 
         </Logger>
-        <Logger name="edu.mit.ll.d4m" level="DEBUG" additivity=false>
+        <Logger name="edu.mit.ll.d4m" level="DEBUG" additivity="false">
             <AppenderRef ref="console" /> 
         </Logger>
-        <Logger name="edu.mit.ll.graphulo" level="DEBUG" additivity=false>
+        <Logger name="edu.mit.ll.graphulo" level="DEBUG" additivity="false">
             <AppenderRef ref="console" /> 
         </Logger>
     </Loggers>
