@@ -198,9 +198,9 @@ public class AccumuloConnection {
         //TODO -FIXME  ClientContext context
 		//eg AccumuloClient client = Accumulo.newClient().from(getClientProps()).build()
         //ClientInfoImpl cii = new ClientInfoImpl(this.conn.getProperties());
-		ClientContext context= (ClientContext)this.connector;
-		ManagerClientService.Client client = ThriftUtil.getClient(ThriftClientTypes.MANAGER, server, context);
-         
+		final ClientContext context= (ClientContext)this.connector;
+		//ManagerClientService.Client client = ThriftUtil.getClient(ThriftClientTypes.MANAGER, server, context);
+        ManagerClientService.Client client = ThriftClientTypes.MANAGER.getConnectionWithRetry(context);
 	    return client;
 	}
 
